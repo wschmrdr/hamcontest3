@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			WA2AEA Contest Logger
+		</title>
+		<script src="jquery-1.10.1.min.js"></script>
+	</head>
+	<body>
+		<p>Welcome to the WA2AEA Contest Logger!</p>
+		Contest:
+		<select id="contest">
+			<option value="">Select a Contest...</option>
+			<option value="ARRL-SS-CW">ARRL-SS-CW</option>
+			<option value="ARRL-SS-SSB">ARRL-SS-SSB</option>
+			<option value="ARRL-FIELDDAY">ARRL-FIELDDAY</option>
+			<option value="NY-QSO-PARTY">NY-QSO-PARTY</option>
+			<option value="ON-QSO-PARTY">ON-QSO-PARTY</option>
+		</select>
+		<br />
+		Server:<input id='server' type='text'></input><br />
+		User:<input id='username' type='text'></input><br />
+		Password:<input id='password' type='password'></input><br />
+		<button type='button' onclick='loadData()' id='startContest'>Submit</button>
+		<p id='info'></p>
+		<script>
+			function loadData() {
+				var sqlServer = $('#server').val();
+				var sqlUser = $('#username').val();
+				var _sqlPass = $('#password').val();
+				$('#password').val('');
+				var contestName = $.trim($('#contest').find(":selected").val());
+				if (contestName == "") {
+					alert("No contest selected.");
+					return;
+				}
+				var mysqliObject;
+				$.post('connect.php', {server : sqlServer, user : sqlUser, pass : _sqlPass}, function(connectionObject) {
+					var connectData = $.parseJSON(connectionObject);
+					switch (connectData["code"]) {
+						case 1045:
+							document.getElementById("info").innerHTML = 'Cannot connect: Incorrect Username/Password.';
+							return;
+						case 1044:
+							document.getElementById("info").innerHTML = 'Database does not exist.';
+							return;
+						case 2005:
+							document.getElementById("info").innerHTML = 'Incorrect Server.';
+							return;
+						case 0:
+							// Success
+							//document.getElementById("info").innerHTML += connectData["object"];
+							mysqliObject = connectData["object"];
+							break;
+						default:
+							document.getElementById("info").innerHTML = 'Error ' + value + ' occurred.';
+							return;
+					}
+				});
+				$.post('ajaxname.php', {db : mysqliObject}, function(dataRecv) {
+					document.getElementById("info").innerHTML += dataRecv;
+				});
+			}
+
+			function checkTable() {
+				// Check existing master_list
+
+				// Check actual table
+
+			}
+		</script>
+	</body>
+</html>
+<!--
+/*
+private boolean connectMysqlDatabase() {
+            if (checkDatabaseForContest()) return true;
+            return false;
+        
+    }
+    private boolean isTableAvailable(String data) {
+        try {    
+            Statement st = mysqlConn.createStatement();
+            ResultSet res;
+            // Check master_list, and if it doesn't exist, try to create it
+            res = st.executeQuery("show tables like '" + data + "'");
+            if (!res.next()) 
+            {
+                res = st.executeQuery("show databases like 'hamcontest_temp'");
+                if (!res.next())
+                {
+                    JOptionPane.showMessageDialog(getFrameCenter(), "No temp area "
+                        + "exists to create tables.\nPlease contact the "
+                        + "Database Administrator.", "Cannot Find Data", 
+                        JOptionPane.ERROR_MESSAGE);
+                    mainApp.getContest().setDataSource(-1);
+                    return false;
+                }
+                res = st.executeQuery("show tables in hamcontest_temp like "
+                        + "'" + data + "'");
+                if (!res.next())
+                {
+                    JOptionPane.showMessageDialog(getFrameCenter(), "Temp area does "
+                        + "not have required table.\nPlease contact the "
+                        + "Database Administrator.", "Cannot Find Data", 
+                        JOptionPane.ERROR_MESSAGE);
+                    mainApp.getContest().setDataSource(-1);
+                    return false;
+                }
+                mainApp.getContest().allowSQLQuotes();
+                try {
+                int i = st.executeUpdate("create table \"" + data + 
+                        "\" like hamcontest_temp.\"" + data + "\"");
+               }catch (SQLException e)
+                {
+                    JOptionPane.showMessageDialog(getFrameCenter(), "Cannot create "
+                            + "a required table.\nPlease contact the "
+                            + "Database Administrator.", "Cannot Create Data", 
+                            JOptionPane.ERROR_MESSAGE);
+                    mainApp.getContest().setDataSource(-1);
+                    return false;
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(getFrameCenter(), "Error " + e.
+                    getSQLState() + " thrown. Please contact\nthe Database "
+                    + "Administrator.", "Cannot Connect to MySQL", JOptionPane
+                    .ERROR_MESSAGE);
+            return false;
+        }
+    }
+private boolean checkDatabaseForContest() {
+        try {
+            Statement st = mysqlConn.createStatement();
+            ResultSet res;
+            // Check if tables exist
+            if (!isTableAvailable("master_list")) return false;
+            if (!isTableAvailable(mainApp.getContest().getCurrentContest()
+                    .getContestName())) return false;
+            // Now look to see if this is new or existing contest data
+            if (!mainApp.getContest().openData()) {
+                // This is new contest Data
+                // First, ready the database
+                st.executeUpdate("insert into master_list(contest, year) "
+                        + "values ('" + mainApp.getContest().getCurrentContest()
+                        .getContestName() + "',year(now()))");
+                res = st.executeQuery("show tables like '" + mainApp.getContest()
+                        .getCurrentContest().getContestName() + "_ARCHIVE'");
+                if (!res.next())
+                {
+                    mainApp.getContest().allowSQLQuotes();
+                    st.executeUpdate("create table \"" + mainApp.getContest()
+                            .getCurrentContest().getContestName() + 
+                            "_ARCHIVE\" like \"" + mainApp.getContest()
+                            .getCurrentContest().getContestName() + "\"");
+                    st.executeUpdate("insert into \"" + mainApp.getContest()
+                            .getCurrentContest().getContestName() + 
+                            "_ARCHIVE\" select * from \"" + mainApp.getContest()
+                            .getCurrentContest().getContestName() + "\"");
+                    st.executeUpdate("delete from \"" + mainApp.getContest()
+                            .getCurrentContest().getContestName() + "\"");
+                }
+                // Now, get our regular contact data
+                mainApp.getContest().setMysqlConnection(mysqlConn);
+                mainApp.enableSentData(startSourceMysqlUser.getText());
+            }
+            else {
+                // Everything in the database is set.
+                mainApp.getContest().setMysqlConnection(mysqlConn);
+                mainApp.getContest().enableMainFrame();
+                mainApp.disableStartApp();
+            }
+            return true;
+            
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(getFrameCenter(), "Error " + e.
+                    getSQLState() + " thrown. Please contact\nthe Database "
+                    + "Administrator.", "Cannot Connect to MySQL", JOptionPane
+                    .ERROR_MESSAGE);
+            mainApp.getContest().setDataSource(-1);
+            return false;
+        }
+    }
+*/
+-->
