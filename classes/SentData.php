@@ -32,7 +32,7 @@ class SentData
         $this->validateData();
         if (!empty($this->errors))
             return;
-        # $this->writeData();
+        $this->writeData();
         echo "<br/></br>";
         foreach ($this->good_data as $key => $value)
         {
@@ -341,16 +341,29 @@ class SentData
         if ($this->good_data['contest_id'] < 0)
         {
             $sql = "INSERT INTO hamcontest.master_list (contest_name_id, date) VALUES (" . $this->good_data['contest_name_id'] . ", now())";
-            $query = $this->db_connection->real_query($sql);
-            if (!$query)
-                $this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';
-            else
-                $contest_id = $this->db_connection->insert_id;
+            echo "FIRST SQL IS " . $sql . "<br/>";
+            #$query = $this->db_connection->real_query($sql);
+            #if (!$query)
+                #$this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';
+            #else
+                #$contest_id = $this->db_connection->insert_id;
+                $contest_id = 0;
         }
         if ($contest_id < 0)
             return;
         unset($this->good_data['contest_id']);
         unset($this->good_data['contest_name_id']);
-
+        $sql = "";
+        $firstItem = true;
+        foreach ($this->good_data as $key => $value)
+        {
+            if ($firstItem)
+                $firstItem = false;
+            else
+                $sql = $sql . ", ";
+            $sql = $sql . $key . "='" . $value . "'";
+        }
+        $sql = "UPDATE hamcontest.master_list SET " . $sql . " WHERE contest_id = " . $contest_id;
+        echo "SECOND SQL IS " . $sql . "<br/>";
     }
 }
