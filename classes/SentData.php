@@ -337,6 +337,20 @@ class SentData
     }
     private function writeData()
     {
-        
+        $contest_id = $this->good_data['contest_id'];
+        if ($this->good_data['contest_id'] < 0)
+        {
+            $sql = "INSERT INTO hamcontest.master_list (contest_name_id, date) VALUES (" . $this->good_data['contest_name_id'] . ", now())";
+            $query = $this->db_connection->real_query($sql);
+            if (!$query)
+                $this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';
+            else
+                $contest_id = $this->db_connection->insert_id;
+        }
+        if ($contest_id < 0)
+            return;
+        unset($this->good_data['contest_id']);
+        unset($this->good_data['contest_name_id']);
+
     }
 }
