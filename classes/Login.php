@@ -87,6 +87,7 @@ class Login
                             $_SESSION['user_name'] = $result_row->username;
                             $_SESSION['user_email'] = $result_row->email;
                             $_SESSION['user_login_status'] = 1;
+                            setcookie('username', strtoupper($result_row->username), time() + (86400 * 30), '/');
 
                         } else {
                             $now = time();

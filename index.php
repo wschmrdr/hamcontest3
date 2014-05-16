@@ -93,7 +93,7 @@ if ($login->isUserLoggedIn() == true) {
             include("views/error.php");
             return;
         }
-        include("views/error.php");
+        include("views/contest.php");
     }
     else
     {

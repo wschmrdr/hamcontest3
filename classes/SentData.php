@@ -29,15 +29,18 @@ class SentData
      */
     public function __construct()
     {
+        if (!isset($_POST['contest_name']))
+        {
+            $this->errors[] = "Did not make Sent Data.";
+            return;
+        }
         $this->validateData();
         if (!empty($this->errors))
             return;
         $this->writeData();
-        echo "<br/></br>";
-        foreach ($this->good_data as $key => $value)
-        {
-            echo "$key $value<br/>";
-        }
+        if (!empty($this->errors))
+            return;
+        setCookie("contestData", json_encode($this->good_data), (86400*30), '/');
     }
     // $_SESSION['contest_name'] = $_POST['contest_name'];
     private function validateData()
@@ -211,8 +214,8 @@ class SentData
                                                       AND longname = '" . $this->db_connection->real_escape_string($_POST['data12']) . "'");
                 $enum_value = $query->fetch_assoc();
                 if (!$enum_value)
-                    $this->errors[] = "Band Category is not in the right format.";
-                else $this->good_data["band_cat"] = $_POST['data12'];
+                    $this->errors[] = "Mode Category is not in the right format.";
+                else $this->good_data["mode_cat"] = $_POST['data12'];
             }
         }
         if ($contest_temp['operator_flag'] == "Y") {
@@ -338,16 +341,16 @@ class SentData
     private function writeData()
     {
         $contest_id = $this->good_data['contest_id'];
+        $contest_name_id = $this->good_data['contest_name_id'];
         if ($this->good_data['contest_id'] < 0)
         {
-            $sql = "INSERT INTO hamcontest.master_list (contest_name_id, date) VALUES (" . $this->good_data['contest_name_id'] . ", now())";
+            $sql = "INSERT INTO hamcontest.master_list (contest_name_id, contest_date) VALUES (" . $this->db_connection->real_escape_string($contest_name_id) . ", now())";
             echo "FIRST SQL IS " . $sql . "<br/>";
-            #$query = $this->db_connection->real_query($sql);
-            #if (!$query)
-                #$this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';
-            #else
-                #$contest_id = $this->db_connection->insert_id;
-                $contest_id = 0;
+            $query = $this->db_connection->real_query($sql);
+            if (!$query)
+                $this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';
+            else
+                $contest_id = $this->db_connection->insert_id;
         }
         if ($contest_id < 0)
             return;
@@ -361,9 +364,13 @@ class SentData
                 $firstItem = false;
             else
                 $sql = $sql . ", ";
-            $sql = $sql . $key . "='" . $value . "'";
+            $sql = $sql . $key . "='" . $this->db_connection->real_escape_string($value) . "'";
         }
-        $sql = "UPDATE hamcontest.master_list SET " . $sql . " WHERE contest_id = " . $contest_id;
-        echo "SECOND SQL IS " . $sql . "<br/>";
+        $sql = "UPDATE hamcontest.master_list SET " . $sql . " WHERE contest_id = " . $this->db_connection->real_escape_string($contest_id);
+        $query = $this->db_connection->real_query($sql);
+        if (!$query)
+            $this->errors[] = 'Cannot populate the contest. Please contact Database Administrator.';
+        $this->good_data['contest_id'] = $contest_id;
+        $this->good_data['contest_name_id'] = $contest_name_id;
     }
 }

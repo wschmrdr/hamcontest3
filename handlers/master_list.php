@@ -9,8 +9,8 @@
         $contest_id = $_GET['id'];
         $sql = $db_connection->query("SELECT * 
                                       FROM hamcontest.master_list 
-                                      WHERE contest_name_id='" + $db_connection->real_escape_string($contest_id) + "'
-                                      AND callsign='" + $db_connection->real_escape_string($_SESSION['user_name']) + "'");
+                                      WHERE contest_name_id='" . $db_connection->real_escape_string($contest_id) . "'
+                                      AND callsign='" . $db_connection->real_escape_string(strtoupper($_SESSION['user_name'])) . "'");
         $rows = array();
         if ($sql->num_rows > 0)
         {
