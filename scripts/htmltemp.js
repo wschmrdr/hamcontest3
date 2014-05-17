@@ -16,15 +16,15 @@ function htmlLongText(dataNum, label, value, required, type) {
     s = s2 + "<input " + s + " />";
     return s;
 }
-function enumGather(dataNum, enumlist, listindex, s, value) {
+function enumGather(htmlField, enumlist, listindex, s, value) {
     if (!enumlist[listindex])
     {
         if (enumlist.length == listindex + 1)
         {
-            $("#data" + dataNum).html(s + "</select><span id='data" + dataNum + "_required'></span>");
+            $("#" + htmlField).html(s + "</select><span id='" + htmlField + "_required'></span>");
             return;
         }
-        enumGather(dataNum, enumlist, listindex + 1, s, value);
+        enumGather(htmlField, enumlist, listindex + 1, s, value);
         return;
     }
     $.ajax({
@@ -63,19 +63,19 @@ function enumGather(dataNum, enumlist, listindex, s, value) {
             }
             if (enumlist.length == listindex + 1)
             {
-                $("#data" + dataNum).html(s + "</select><span id='data" + dataNum + "_required'></span>");
+                $("#" + htmlField).html(s + "</select><span id='" + htmlField + "_required'></span>");
                 return;
             }
-            enumGather(dataNum, enumlist, listindex + 1, s, value);
+            enumGather(htmlField, enumlist, listindex + 1, s, value);
             return;
         }
     });
 }
-function htmlLongEnum(dataNum, label, enumlist, value) {
-    var s = "<label for='data" + dataNum + "'>" + label + "</label>";
-    s +=    "<select id='data" + dataNum + "' name='data" + dataNum + "'>";
+function htmlLongEnum(htmlField, label, enumlist, value) {
+    var s = "<label for='" + htmlField + "'>" + label + "</label>";
+    s +=    "<select id='" + htmlField + "' name='" + htmlField + "'>";
     s +=        "<option value=''>Select...</option>";
-    enumGather(dataNum, enumlist, 0, s, value);
+    enumGather(htmlField, enumlist, 0, s, value);
 }
 function htmlLongNovSSPrecedent(dataNum) {
     var s = "<label for='data" + dataNum + "'>Precedent</label>";
