@@ -17,6 +17,8 @@ if (isset($messageHandler)) {
     <head>
         <script src="jquery-1.10.1.min.js"></script>
         <script src="underscore-min.js"></script>
+        <script src="scripts/contest.js"></script>
+        <script src="scripts/common.js"></script>
         <script src="scripts/htmltemp.js"></script>
         <script src="scripts/enum.js"></script>
         <script src="moment.min.js"></script>
@@ -30,6 +32,7 @@ if (isset($messageHandler)) {
         <div id="sectSelect"></div>
         <div id="sentData"></div>
         <div id="contactList"></div>
+        <div id="dupeArea"></div>
         <a href="#" id="download">Download</a><br/>
         <a href="#" id="prefs">Preferences</a><br/>
         <a href="index.php?logout">Logout</a><br/>

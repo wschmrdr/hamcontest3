@@ -19,6 +19,7 @@ if (isset($messageHandler)) {
         <script src="jquery-1.10.1.min.js"></script>
         <script src="underscore-min.js"></script>
         <script src="scripts/sent_data.js"></script>
+        <script src="scripts/common.js"></script>
         <script src="scripts/htmltemp.js"></script>
         <script src="scripts/enum.js"></script>
         <script src="moment.min.js"></script>

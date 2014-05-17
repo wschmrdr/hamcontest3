@@ -40,7 +40,7 @@ class SentData
         $this->writeData();
         if (!empty($this->errors))
             return;
-        setCookie("contestData", json_encode($this->good_data), (86400*30), '/');
+        setCookie("contestData", json_encode($this->good_data), time() + (86400*30), '/');
     }
     // $_SESSION['contest_name'] = $_POST['contest_name'];
     private function validateData()
@@ -370,7 +370,27 @@ class SentData
         $query = $this->db_connection->real_query($sql);
         if (!$query)
             $this->errors[] = 'Cannot populate the contest. Please contact Database Administrator.';
+
         $this->good_data['contest_id'] = $contest_id;
+        $masterList = json_decode($_COOKIE['masterList'], TRUE);
+        foreach ($masterList as $key => $value)
+        {
+            if ($value['contest_id'] == $this->good_data['contest_id'])
+            {
+                setcookie('masterList', json_encode($value), time() + (86400 * 30), '/');
+                break;
+            }
+        }
+
         $this->good_data['contest_name_id'] = $contest_name_id;
+        $contestList = json_decode($_COOKIE['contestList'], TRUE);
+        foreach ($contestList as $key => $value)
+        {
+            if ($value['contest_name_id'] == $this->good_data['contest_name_id'])
+            {
+                setcookie('contestList', json_encode($value), time() + (86400 * 30), '/');
+                break;
+            }
+        }
     }
 }
