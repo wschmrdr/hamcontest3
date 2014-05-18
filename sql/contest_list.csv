@@ -1,4 +1,4 @@
-contest_name,type_data1,type_data2,type_data3,type_data4,type_data5,freq_dupe_flag,mode_dupe_flag,data1_dupe_flag,data2_dupe_flag,data3_dupe_flag,data4_dupe_flag,data5_dupe_flag,assisted_flag,band_flag,mode_flag,operator_flag,power_flag,station_flag,time_flag,transmitter_flag,overlay_flag,personal_flag
-ARRL-SS-CW,22,23,24,25,0,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y
-ARRL-SS-SSB,22,23,24,25,0,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y
-ARRL-FIELDDAY,26,25,0,0,0,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+contest_name,type_data1,type_data2,type_data3,type_data4,type_data5,call_loc,freq_dupe_flag,mode_dupe_flag,data1_dupe_flag,data2_dupe_flag,data3_dupe_flag,data4_dupe_flag,data5_dupe_flag,assisted_flag,band_flag,mode_flag,operator_flag,power_flag,station_flag,time_flag,transmitter_flag,overlay_flag,personal_flag,score_formula
+ARRL-SS-CW,22,23,24,25,0,2,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y,c2m0m4
+ARRL-SS-SSB,22,23,24,25,0,2,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y,c2m0m4
+ARRL-FIELDDAY,26,25,0,0,0,0,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,c2m7CWm0ac2m7RYm0a7PHm0

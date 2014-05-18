@@ -194,7 +194,7 @@ var instanceSelected = function(contestInstanceId) {
                     break;
                 case "enum":
                     $("#otherdata").html($("#otherdata").html() + "<div id='data" + x + "'></div>");
-                    htmlLongEnum('data' + x, dataType['long_name'], [dataType['enum1'], dataType['enum2'], dataType['enum3']], value);
+                    htmlLongEnum('data' + x, dataType['long_name'], [dataType['enum1'], dataType['enum2'], dataType['enum3']], value, []);
                     $("#data" + x + "_required").html("");
                     break;
                 case "special":
@@ -214,63 +214,63 @@ var instanceSelected = function(contestInstanceId) {
     {
         if (instance) value = instance["assisted_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data10'></div>");
-        htmlLongEnum('data10', "Assisted Category", ["assisted_cat"], value);
+        htmlLongEnum('data10', "Assisted Category", ["assisted_cat"], value, []);
         $("#data10_required").html("");
     }
     if (contest['band_flag'] == "Y")
     {
         if (instance) value = instance["band_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data11'></div>");
-        htmlLongEnum('data11', "Band Category", ["band_cat"], value);
+        htmlLongEnum('data11', "Band Category", ["band_cat"], value, []);
         $("#data11_required").html("");
     }
     if (contest['mode_flag'] == "Y")
     {
         if (instance) value = instance["mode_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data12'></div>");
-        htmlLongEnum('data12', "Mode Category", ["mode_cat"], value);
+        htmlLongEnum('data12', "Mode Category", ["mode_cat"], value, []);
         $("#data12_required").html("");
     }
     if (contest['operator_flag'] == "Y")
     {
         if (instance) value = instance["operator_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data13'></div>");
-        htmlLongEnum('data13', "Operator Category", ["operator_cat"], value);
+        htmlLongEnum('data13', "Operator Category", ["operator_cat"], value, []);
         $("#data13_required").html("");
     }
     if (contest['power_flag'] == "Y")
     {
         if (instance) value = instance["power"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data14'></div>");
-        htmlLongEnum('data14', "Power Category", ["power"], value);
+        htmlLongEnum('data14', "Power Category", ["power"], value, []);
         $("#data14_required").html("");
     }
     if (contest['station_flag'] == "Y")
     {
         if (instance) value = instance["station_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data15'></div>");
-        htmlLongEnum('data15', "Station Category", ["station_cat"], value);
+        htmlLongEnum('data15', "Station Category", ["station_cat"], value, []);
         $("#data15_required").html("");
     }
     if (contest['time_flag'] == "Y")
     {
         if (instance) value = instance["time_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data16'></div>");
-        htmlLongEnum('data16', "Time Category", ["time_cat"], value);
+        htmlLongEnum('data16', "Time Category", ["time_cat"], value, []);
         $("#data16_required").html("");
     }
     if (contest['transmitter_flag'] == "Y")
     {
         if (instance) value = instance["transmitter_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data17'></div>");
-        htmlLongEnum('data17', "Transmitter Category", ["transmitter_cat"], value);
+        htmlLongEnum('data17', "Transmitter Category", ["transmitter_cat"], value, []);
         $("#data17_required").html("");
     }
     if (contest['overlay_flag'] == "Y")
     {
         if (instance) value = instance["overlay_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='data18'></div>");
-        htmlLongEnum('data18', "Overlay Category", ["overlay_cat"], value);
+        htmlLongEnum('data18', "Overlay Category", ["overlay_cat"], value, []);
         $("#data18_required").html("");
     }
     if (contest['personal_flag'] == "Y")

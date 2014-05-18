@@ -1,6 +1,6 @@
 function htmlLongText(dataNum, label, value, required, type) {
-    var s2 = "<label for='data" + dataNum + "'>" + label + "</label>";
-    var s = "id='data" + dataNum + "' type='text' name='data" + dataNum + "' value='" + value + "'";
+    var s2 = "<label for='" + dataNum + "'>" + label + "</label>";
+    var s = "id='" + dataNum + "' type='text' name='" + dataNum + "' value='" + value + "'";
     if (required)
     {
         s += " required";
@@ -16,7 +16,7 @@ function htmlLongText(dataNum, label, value, required, type) {
     s = s2 + "<input " + s + " />";
     return s;
 }
-function enumGather(htmlField, enumlist, listindex, s, value) {
+function enumGather(htmlField, enumlist, listindex, s, value, omit) {
     if (!enumlist[listindex])
     {
         if (enumlist.length == listindex + 1)
@@ -24,7 +24,7 @@ function enumGather(htmlField, enumlist, listindex, s, value) {
             $("#" + htmlField).html(s + "</select><span id='" + htmlField + "_required'></span>");
             return;
         }
-        enumGather(htmlField, enumlist, listindex + 1, s, value);
+        enumGather(htmlField, enumlist, listindex + 1, s, value, omit);
         return;
     }
     $.ajax({
@@ -35,47 +35,35 @@ function enumGather(htmlField, enumlist, listindex, s, value) {
             var values = $.parseJSON(output);
             for (var y in values)
             {
+                var optionvalue = values[y]['longname'];
+                var displayvalue = values[y]['longname'];
                 if (values[y]['shortname'])
                 {
-                    if (value == values[y]['shortname'])
-                    {
-                        s += "<option value='" + values[y]['shortname'] + "' selected='selected'>";
-                    }
-                    else
-                    {
-                        s += "<option value='" + values[y]['shortname'] + "'>";
-                    }
-                    s += values[y]['shortname'] + " - " + values[y]['longname'];
+                    optionvalue = values[y]['shortname'];
+                    displayvalue = values[y]['shortname'] + " - " + values[y]['longname'];
                 }
+                if (_.find(omit, function(v){ return v == optionvalue; }))
+                    continue;
+                if (value == optionvalue)
+                    s += "<option value='" + optionvalue + "' selected='selected'>" + displayvalue + "</option>";
                 else
-                {
-                    if (value == values[y]['longname'])
-                    {
-                        s += "<option value='" + values[y]['longname'] + "' selected='selected'>";
-                    }
-                    else
-                    {
-                        s += "<option value='" + values[y]['longname'] + "'>";
-                    }
-                    s += values[y]['longname'];
-                }
-                s += "</option>";
+                    s += "<option value='" + optionvalue + "'>" + displayvalue + "</option>";
             }
             if (enumlist.length == listindex + 1)
             {
                 $("#" + htmlField).html(s + "</select><span id='" + htmlField + "_required'></span>");
                 return;
             }
-            enumGather(htmlField, enumlist, listindex + 1, s, value);
+            enumGather(htmlField, enumlist, listindex + 1, s, value, omit);
             return;
         }
     });
 }
-function htmlLongEnum(htmlField, label, enumlist, value) {
+function htmlLongEnum(htmlField, label, enumlist, value, omit) {
     var s = "<label for='" + htmlField + "'>" + label + "</label>";
     s +=    "<select id='" + htmlField + "' name='" + htmlField + "'>";
     s +=        "<option value=''>Select...</option>";
-    enumGather(htmlField, enumlist, 0, s, value);
+    enumGather(htmlField, enumlist, 0, s, value, omit);
 }
 function htmlLongNovSSPrecedent(dataNum) {
     var s = "<label for='data" + dataNum + "'>Precedent</label>";

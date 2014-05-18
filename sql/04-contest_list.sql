@@ -6,6 +6,7 @@ CREATE TABLE contest_list (
     type_data3 integer unsigned,
     type_data4 integer unsigned,
     type_data5 integer unsigned,
+    call_loc tinyint unsigned,
     freq_dupe_flag char(1),
     mode_dupe_flag char(1),
     data1_dupe_flag char(1),

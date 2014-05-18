@@ -27,10 +27,10 @@ if (isset($messageHandler)) {
         <div id="title"></div>
         <div id="score"></div>
         <div id="dataEntry"></div>
-        <div id="bandSelect"></div>
-        <div id="modeSelect"></div>
+        <div id="frequency"></div>
+        <div id="contactmode"></div>
         <div id="sectSelect"></div>
-        <div id="sentData"></div>
+        <div id="checkLine"></div>
         <div id="contactList"></div>
         <div id="dupeArea"></div>
         <a href="#" id="download">Download</a><br/>
