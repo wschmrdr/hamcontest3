@@ -22,6 +22,7 @@ if (isset($messageHandler)) {
         <script src="scripts/htmltemp.js"></script>
         <script src="scripts/enum.js"></script>
         <script src="moment.min.js"></script>
+        <script src="pad.js"></script>
     </head>
     <body>
         <div id="title"></div>

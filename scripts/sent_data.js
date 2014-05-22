@@ -137,32 +137,6 @@ $("document").ready( function() {
     });
 });
 
-var getObject = function(cookie_name, id) {
-    var list = getCookie(cookie_name);
-    if (!list) return null;
-    list = $.parseJSON(list);
-    var unique_id = "";
-    switch (cookie_name)
-    {
-        case "contestList":
-            unique_id = "contest_name_id";
-            break;
-        case "dataType":
-            unique_id = "data_type_id";
-            break;
-        case "masterList":
-            unique_id = "contest_id";
-            break;
-    }
-    if (!unique_id) return null;
-    for (var x in list)
-    {
-        if (list[x][unique_id] == id)
-            return list[x];
-    }
-    return null;
-}
-
 var instanceSelected = function(contestInstanceId) {
     if (!contestInstanceId) return;
     var contest = getObject("contestList", $("#contest_name").val());

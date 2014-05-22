@@ -65,7 +65,7 @@ class SentData
             $this->errors[] = "Database connection problem.";
             return;
         }
-        $query = $this->db_connection->query("SELECT * FROM hamcontest.contest_list WHERE contest_name_id = " . $this->good_data['contest_name_id']);
+        $query = $this->db_connection->query("SELECT * FROM hamcontest.contest_list WHERE contest_name_id = " . $this->db_connection->real_escape_string($this->good_data['contest_name_id']));
         $contest_temp = $query->fetch_assoc();
         if (!$contest_temp) {
             $this->errors[] = "Contest does not exist. Please contact administrator.";
@@ -83,13 +83,36 @@ class SentData
             }
             else {
                 if ($contest_temp['type_data' . $x] <= 0) continue;
-                $query = $this->db_connection->query("SELECT * FROM hamcontest.data_type WHERE data_type_id = " . $contest_temp['type_data' . $x]);
+                $query = $this->db_connection->query("SELECT * FROM hamcontest.data_type WHERE data_type_id = " . $this->db_connection->real_escape_string($contest_temp['type_data' . $x]));
                 $data_type = $query->fetch_assoc();
                 if (!$data_type) {
                     $this->errors[] = "Data Type does not exist. Please contact administrator.";
                     continue;
                 }
-                if ($data_type["sent_data"] == 0) continue;
+                if ($data_type["sent_data"] == 0) 
+                {
+                    if (stripos($data_type["unique_name"], "Record Number") !== false)
+                    {
+                        if ($this->good_data["contest_id"] < 0)
+                        {
+                            $this->good_data["x_data" . $x] = 1;
+                        }
+                        else
+                        {
+                            $query = $this->db_connection->query("SELECT MAX(sentdata" . $x . ") FROM hamcontest.contact_data WHERE contest_id = " + $this->db_connection->real_escape_string($this->good_data["contest_id"]));
+                            if (!$query)
+                            {
+                                $this->good_data["x_data" . $x] = 1;
+                            }
+                            else
+                            {
+                                $recordnumber = $query->fetch_assoc();
+                                $this->good_data["x_data" . $x] = $recordnumber + 1;
+                            }
+                        }
+                    }
+                    continue;
+                }
                 switch ($data_type["data_type"]) {
                     case "number":
                         if (!$_POST['data' . $x] && !is_numeric($_POST['data' . $x]))
@@ -345,7 +368,6 @@ class SentData
         if ($this->good_data['contest_id'] < 0)
         {
             $sql = "INSERT INTO hamcontest.master_list (contest_name_id, contest_date) VALUES (" . $this->db_connection->real_escape_string($contest_name_id) . ", now())";
-            echo "FIRST SQL IS " . $sql . "<br/>";
             $query = $this->db_connection->real_query($sql);
             if (!$query)
                 $this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';

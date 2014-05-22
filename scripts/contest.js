@@ -1,12 +1,69 @@
 $(document).ready( function() {
     var contestList = $.parseJSON(getCookie('contestList'));
     var masterList = $.parseJSON(getCookie('masterList'));
-    var dataType = $.parseJSON(getCookie('dataType'));
     if (!$("#title").html())
         $("#title").html(contestList['contest_name']);
     if (!$("#dataEntry").html())
     {
-        // for (var x = 1; x < 5; x++)
+        var callAdded = false;
+        var s = "<form id='contactdataform' name='sentdataform'>";
+        for (var x = 1; x < 6; x++)
+        {
+            if (!contestList['type_data' + x])
+                continue;
+            if (!callAdded && x > contestList['call_loc'])
+            {
+                s += htmlLongText('recvcall', 'Call', "", true, "string");
+                callAdded = true;
+            }
+            var dataType = getObject("dataType", contestList['type_data' + x]);
+            if (!dataType) continue;
+            switch (dataType['data_type'])
+            {
+                case "string":
+                case "enum":
+                    if (dataType['double_entry'] > 0)
+                    {
+                        s += "<label>" + dataType['short_name'] + "</label>";
+                        s += htmlLongText('sentdata' + x, 'SENT', "", true, "string");
+                        s += htmlLongText('recvdata' + x, 'RECV', "", true, "string");
+                    }
+                    else
+                    {
+                        s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "string");
+                    }
+                    break;
+                case "number":
+                    if (dataType['double_entry'] > 0)
+                    {
+                        s += "<label>" + dataType['short_name'] + "</label>";
+                        s += htmlLongText('sentdata' + x, 'SENT', "", true, "number");
+                        s += htmlLongText('recvdata' + x, 'RECV', "", true, "number");
+                    }
+                    else
+                    {
+                        s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "number");
+                    }
+                    break;
+                case "special":
+                    if (dataType['unique_name'] == "Precedent - ARRL November Sweepstakes")
+                    {
+                        if (dataType['double_entry'] > 0)
+                        {
+                            s += "<label>" + dataType['short_name'] + "</label>";
+                            s += htmlLongText('sentdata' + x, 'SENT', "", true, "number");
+                            s += htmlLongText('recvdata' + x, 'RECV', "", true, "number");
+                        }
+                        else
+                        {
+                            s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "number");
+                        }
+                    }
+                    break;
+            }
+        }
+        s += "<input type='submit' name='sentdata' value='OK' /></form>";
+        $("#dataEntry").html(s);
     }
     if (!$("#frequency").html())
     {
@@ -50,7 +107,8 @@ var updateUserCheckLine = function() {
             s += masterList['callsign'] + " ";
             callAdded = true;
         }
-        s += masterList['x_data' + x] + " ";
+        if (masterList['x_data' + x])
+            s += masterList['x_data' + x] + " ";
     }
     $("#checkLine").html(s);
 }
