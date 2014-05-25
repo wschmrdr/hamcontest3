@@ -6,7 +6,7 @@ $(document).ready( function() {
     if (!$("#dataEntry").html())
     {
         var callAdded = false;
-        var s = "<form id='contactdataform' name='sentdataform'>";
+        var s = "<form id='contactdataform' name='contactdataform'>";
         for (var x = 1; x < 6; x++)
         {
             if (!contestList['type_data' + x])
@@ -62,7 +62,7 @@ $(document).ready( function() {
                     break;
             }
         }
-        s += "<input type='submit' name='sentdata' value='OK' /></form>";
+        s += "<input type='submit' name='contactdata' value='OK' /></form>";
         $("#dataEntry").html(s);
     }
     if (!$("#frequency").html())
@@ -91,6 +91,14 @@ $(document).ready( function() {
     updateUserCheckLine();
     updateContactListDisplay();
     updateScoreDisplay();
+
+    $("#contactdataform").submit(function() {});
+    $("#recvcall").keypress(function() {});
+    $("#recvcall").focusout(function() {});
+    $("#download").click(function() {});
+    $("#prefs").click(function() {});
+    $("#contactList select").dblclick(function() {});
+    $("#frequency select").change(function() {});
 });
 
 var updateUserCheckLine = function() {
