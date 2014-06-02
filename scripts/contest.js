@@ -6,7 +6,8 @@ $(document).ready( function() {
     if (!$("#dataEntry").html())
     {
         var callAdded = false;
-        var s = "<form id='contactdataform' name='contactdataform'>";
+        var s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(); return false;'>";
+        var double_index = 0;
         for (var x = 1; x < 6; x++)
         {
             if (!contestList['type_data' + x])
@@ -14,6 +15,7 @@ $(document).ready( function() {
             if (!callAdded && x > contestList['call_loc'])
             {
                 s += htmlLongText('recvcall', 'Call', "", true, "string");
+                $("#recvcall input").attr("tabindex", "1");
                 callAdded = true;
             }
             var dataType = getObject("dataType", contestList['type_data' + x]);
@@ -27,10 +29,14 @@ $(document).ready( function() {
                         s += "<label>" + dataType['short_name'] + "</label>";
                         s += htmlLongText('sentdata' + x, 'SENT', "", true, "string");
                         s += htmlLongText('recvdata' + x, 'RECV', "", true, "string");
+                        $("#sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
+                        double_index++;
                     }
                     else
                     {
                         s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "string");
+                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                     }
                     break;
                 case "number":
@@ -39,10 +45,14 @@ $(document).ready( function() {
                         s += "<label>" + dataType['short_name'] + "</label>";
                         s += htmlLongText('sentdata' + x, 'SENT', "", true, "number");
                         s += htmlLongText('recvdata' + x, 'RECV', "", true, "number");
+                        $("#sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
+                        double_index++;
                     }
                     else
                     {
                         s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "number");
+                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                     }
                     break;
                 case "special":
@@ -51,12 +61,16 @@ $(document).ready( function() {
                         if (dataType['double_entry'] > 0)
                         {
                             s += "<label>" + dataType['short_name'] + "</label>";
-                            s += htmlLongText('sentdata' + x, 'SENT', "", true, "number");
-                            s += htmlLongText('recvdata' + x, 'RECV', "", true, "number");
+                            s += htmlLongText('sentdata' + x, 'SENT', "", true, "string");
+                            s += htmlLongText('recvdata' + x, 'RECV', "", true, "string");
+                            $("#sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                            $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
+                            double_index++;
                         }
                         else
                         {
-                            s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "number");
+                            s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "string");
+                            $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                         }
                     }
                     break;
@@ -76,9 +90,7 @@ $(document).ready( function() {
     {
         if (contestList['mode_flag'] != "Y")
         {
-            $("#contactmode").html(htmlLongEnum('contactmode', 'Mode', ["mode_cat"], "", 'ALL'));
-            var x = $("#contactmode select option[value='MIXED']").index();
-            document.getElementsByName("frequency")[0].remove(x);
+            $("#contactmode").html(htmlLongEnum('contactmode', 'Mode', ["mode_cat"], "", ['MIXED']));
         }
     }
     if (!$("#sectSelect").html())
@@ -92,13 +104,12 @@ $(document).ready( function() {
     updateContactListDisplay();
     updateScoreDisplay();
 
-    $("#contactdataform").submit(function() {});
-    $("#recvcall").keypress(function() {});
-    $("#recvcall").focusout(function() {});
-    $("#download").click(function() {});
-    $("#prefs").click(function() {});
-    $("#contactList select").dblclick(function() {});
-    $("#frequency select").change(function() {});
+    $("#recvcall").keypress(function() { console.log("Key Press triggered."); });
+    $("#recvcall").focusout(function() { console.log("Focus off triggered."); });
+    $("#download").click(function() { console.log("Download triggered."); });
+    $("#prefs").click(function() { console.log("Preferences triggered."); });
+    $('body').on('dblclick', '#contactList select', function() { console.log("Contact List Select triggered."); });
+    $('body').on('change', '#frequency select', function() { console.log("Frequency Select triggered."); });
 });
 
 var updateUserCheckLine = function() {
@@ -116,7 +127,14 @@ var updateUserCheckLine = function() {
             callAdded = true;
         }
         if (masterList['x_data' + x])
-            s += masterList['x_data' + x] + " ";
+        {
+            var dataType = getObject("dataType", contestList['type_data' + x]);
+            if (!dataType) continue;
+            if (dataType['unique_name'] == "Precedent - ARRL November Sweepstakes")
+                s += displayNovSSPrecedent(masterList['x_data' + x]) + " ";
+            else
+                s += masterList['x_data' + x] + " ";
+        }
     }
     $("#checkLine").html(s);
 }
@@ -139,4 +157,32 @@ var updateContactListDisplay = function() {
 }
 
 var updateScoreDisplay = function() {
+}
+
+var enterNewContact = function() {
+    var masterList = $.parseJSON(getCookie('masterList'));
+    console.log("Enter New Contact triggered.");
+    // Check for Valid Contact
+        // Dupe Check
+        // Contents
+        if (!isValidCall($("#recvcall").val()))
+        {
+            $("#dupearea").html("Call is not valid.");
+        }
+    // Add Contact
+    var contactData = {};
+    contactData["contest_id"] = masterList["contest_id"];
+    contactData["frequency"] = "";
+    $.ajax({
+        type: "POST",
+        url: "handlers/enter_contact.php",
+        data {}
+    });
+    // Reset Contact Display
+    // Update Contact List Display
+    updateContactListDisplay();
+    // Update User Check Line
+    updateUserCheckLine();
+    // Update Score Display
+    updateScoreDisplay();
 }

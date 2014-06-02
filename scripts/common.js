@@ -34,3 +34,19 @@ var getObject = function(cookie_name, id) {
     }
     return null;
 }
+
+var isValidCall = function(callsign) {
+    if (!callsign || 0 === callsign.length) return false;
+    var call_array = callsign.split("/");
+    for (var x in call_array)
+    {
+        if (x === x.toUpperCase().match(/[A-Z0-9]{1,3}[0-9]{1}[A-Z0-9]{1,3}/g)) return true;
+    }
+    return false;
+}
+
+var displayNovSSPrecedent = function(prec) {
+    if (prec == "L") return "U";
+    if (prec == "W") return "M";
+    return prec;
+}
