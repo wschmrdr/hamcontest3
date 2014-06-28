@@ -1,39 +1,25 @@
 <?php
 
 /**
- * Class login
- * handles the user's login and logout process
  */
 class SentData
 {
-    /**
-     * @var object The database connection
-     */
     private $db_connection = null;
-    /**
-     * @var array Collection of error messages
-     */
+    private $sql = null;
     public $errors = array();
-    /**
-     * @var array Collection of success / neutral messages
-     */
     public $messages = array();
-    /**
-     * @var array Collection of acceptable data
-     */
+
     public $good_data = array();
 
-    /**
-     * the function "__construct()" automatically starts whenever an object of this class is created,
-     * you know, when you do "$login = new Login();"
-     */
     public function __construct()
     {
+        include_once($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
         if (!isset($_POST['contest_name']))
         {
             $this->errors[] = "Did not make Sent Data.";
             return;
         }
+        $this->sql = new SQLfunction();
         $this->validateData();
         if (!empty($this->errors))
             return;
@@ -42,31 +28,17 @@ class SentData
             return;
         setCookie("contestData", json_encode($this->good_data), time() + (86400*30), '/');
     }
-    // $_SESSION['contest_name'] = $_POST['contest_name'];
     private function validateData()
     {
-        // Check the Existence of a Contest
-        if (!$_POST['contest_name'] && !is_numeric($_POST['contest_name']))
-            $this->errors[] = "Contest does not exist.";
-        else $this->good_data["contest_name_id"] = $_POST['contest_name'];
-        
-        // Check the Existence of a Contest Instance, whether new or old
-        if (!$_POST['contest_instance'] && !is_numeric($_POST['contest_instance']))
-            $this->errors[] = "Contest Instance does not exist.";
-        else $this->good_data["contest_id"] = $_POST['contest_instance'];
+        require_once($_SERVER['DOCUMENT_ROOT'] . "/shared/validate.php");
+        $validator_checks = array('contest_name' => array('required' => true, 'numeric' => true), 'contest_instance' => array('required' => true, 'numeric' => true));
+        $validate = new Validation("SentData", $_POST, $validator_checks);
 
-        // Load the contest
-        $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        if (!$this->db_connection->set_charset("utf8")) {
-            $this->errors[] = $this->db_connection->error;
-            return;
-        }
-        if ($this->db_connection->connect_errno) {
-            $this->errors[] = "Database connection problem.";
-            return;
-        }
-        $query = $this->db_connection->query("SELECT * FROM hamcontest.contest_list WHERE contest_name_id = " . $this->db_connection->real_escape_string($this->good_data['contest_name_id']));
-        $contest_temp = $query->fetch_assoc();
+        $this->errors = array_merge($validate->errors, $this->errors);
+        if (array_key_exists('contest_name', $validate->good_data)) $this->good_data['contest_name_id'] = $validate->good_data['contest_name'];
+        if (array_key_exists('contest_instance', $validate->good_data)) $this->good_data['contest_id'] = $validate->good_data['contest_instance'];
+
+        $contest_temp = $this->sql->sql(array("db" => "hamcontest", "table" => "contest_list", "fetchall" => false))->select(array('contest_name_id' => $this->good_data['contest_name_id']));
         if (!$contest_temp) {
             $this->errors[] = "Contest does not exist. Please contact administrator.";
             return;
@@ -74,292 +46,69 @@ class SentData
 
         // Now check Sent Data
         // It is only required if it exists in the contest
-        for ($x = 0; $x < 6; $x++)
+        $validator_checks = array('callsign' => array('required' => true, 'callsign' => true));
+        for ($x = 1; $x < 6; $x++)
         {
-            if ($x == 0) {
-                if (!$_POST['data0'] && !preg_match('/[0-9A-Z/]/', strtoupper($_POST['data0'])))
-                    $this->errors[] = "Call sign is not in the right format.";
-                else $this->good_data["callsign"] = strtoupper($_POST['data0']);
+            if ($contest_temp['type_data' . $x] <= 0) continue;
+            $data_type = $this->sql->sql(array("table" => "data_type", "fetchall" => false))->select(array('data_type_id' => $contest_temp['type_data' . $x]));
+            if (!$data_type) {
+                $this->errors[] = "Data Type does not exist. Please contact administrator.";
+                continue;
             }
-            else {
-                if ($contest_temp['type_data' . $x] <= 0) continue;
-                $query = $this->db_connection->query("SELECT * FROM hamcontest.data_type WHERE data_type_id = " . $this->db_connection->real_escape_string($contest_temp['type_data' . $x]));
-                $data_type = $query->fetch_assoc();
-                if (!$data_type) {
-                    $this->errors[] = "Data Type does not exist. Please contact administrator.";
-                    continue;
-                }
-                if ($data_type["sent_data"] == 0) 
+            if (stripos($data_type["unique_name"], "Record Number") !== false)
+            {
+                if ($this->good_data["contest_id"] < 0) $this->good_data["x_data" . $x] = 1;
+                else
                 {
-                    if (stripos($data_type["unique_name"], "Record Number") !== false)
-                    {
-                        if ($this->good_data["contest_id"] < 0)
-                        {
-                            $this->good_data["x_data" . $x] = 1;
-                        }
-                        else
-                        {
-                            $query = $this->db_connection->query("SELECT MAX(sentdata" . $x . ") FROM hamcontest.contact_data WHERE contest_id = " + $this->db_connection->real_escape_string($this->good_data["contest_id"]));
-                            if (!$query)
-                            {
-                                $this->good_data["x_data" . $x] = 1;
-                            }
-                            else
-                            {
-                                $recordnumber = $query->fetch_assoc();
-                                $this->good_data["x_data" . $x] = $recordnumber + 1;
-                            }
-                        }
-                    }
-                    continue;
+                    $query = $this->sql->sql(array("table" => "contact_data", "columns" => array("MAX" => "sentdata" . $x), "fetchall" => false))->select(array('contest_id' => $this->good_data['contest_id']));
+                    if (!array_key_exists('sentdata' . $x, $query)) $this->good_data["x_data" . $x] = 1;
+                    else $this->good_data["x_data" . $x] = $query['sentdata' . $x] + 1;
                 }
-                switch ($data_type["data_type"]) {
-                    case "number":
-                        if (!$_POST['data' . $x] && !is_numeric($_POST['data' . $x]))
-                            $this->errors[] = $data_type["longname"] . " is not in the right format.";
-                        else $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                        break;
-                    case "string":
-                        if (!$_POST['data' . $x] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data' . $x])))
-                            $this->errors[] = $data_type["longname"] . " is not in the right format.";
-                        else $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                        break;
-                    case "enum":
-                        if (!$_POST['data' . $x])
-                            $this->errors[] = $data_type["longname"] . " does not exist.";
-                        else {
-                            $mysqlString = "SELECT * FROM hamcontest.enum_values WHERE enum_type IN ('" . $data_type['enum1'] . "', '" . $data_type['enum2'] . "', '" . $data_type['enum3'] . "') AND (shortname = '" . $this->db_connection->real_escape_string($_POST['data' . $x]) . "' OR longname = '" . $this->db_connection->real_escape_string($_POST['data' . $x]) . "')";
-                            $query = $this->db_connection->query($mysqlString);
-                            $enum_value = $query->fetch_assoc();
-                            if (!$enum_value)
-                                $this->errors[] = $data_type["longname"] . " is not in the right format.";
-                            else $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                        }
-                        break;
-                    case "special":
-                        if ($data_type["unique_name"] == "Precedent - ARRL November Sweepstakes") {
-                            switch ($_POST['data' . $x]) {
-                                case 'A':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["power"] = "LOW";
-                                    $this->good_data["operator_cat"] = "SINGLE-OP";
-                                    $this->good_data["assisted_cat"] = "NON-ASSISTED";
-                                    break;
-                                case 'B':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["power"] = "HIGH";
-                                    $this->good_data["operator_cat"] = "SINGLE-OP";
-                                    $this->good_data["assisted_cat"] = "NON-ASSISTED";
-                                    break;
-                                case 'Q':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["power"] = "QRP";
-                                    $this->good_data["operator_cat"] = "SINGLE-OP";
-                                    $this->good_data["assisted_cat"] = "NON-ASSISTED";
-                                    break;
-                                case 'U':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["power"] = "HIGH";
-                                    $this->good_data["operator_cat"] = "SINGLE-OP";
-                                    $this->good_data["assisted_cat"] = "ASSISTED";
-                                    break;
-                                case 'L':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["power"] = "LOW";
-                                    $this->good_data["operator_cat"] = "SINGLE-OP";
-                                    $this->good_data["assisted_cat"] = "ASSISTED";
-                                    break;
-                                case 'M':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["power"] = "HIGH";
-                                    $this->good_data["operator_cat"] = "MULTI-OP";
-                                    $this->good_data["assisted_cat"] = "ASSISTED";
-                                    break;
-                                case 'W':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["power"] = "LOW";
-                                    $this->good_data["operator_cat"] = "MULTI-OP";
-                                    $this->good_data["assisted_cat"] = "ASSISTED";
-                                    break;
-                                case 'S':
-                                    $this->good_data["x_data" . $x] = $_POST['data' . $x];
-                                    $this->good_data["station_cat"] = "SCHOOL";
-                                    break;
-                                default:
-                                    $this->errors[] = $data_type["longname"] . " is not in the right format.";
-                            }
-                        }
-                        break;
-                    default:
-                        $this->errors[] = $data_type["longname"] . " is not a recognized type.";
-                        
-                }
+                continue;
+            }
+            $validator_checks['x_data' . $x] = array('required' => ($data_type["sent_data"] != 0));
+            switch ($data_type["data_type"]) 
+            {
+                case "number":
+                    $validator_checks['x_data' . $x]['number'] = true;
+                    $validator_checks['x_data' . $x]['maxlength'] = $data_type['max_length'];
+                    break;
+                case "string":
+                    $validator_checks['x_data' . $x]['maxlength'] = $data_type['max_length'];
+                    break;
+                case "enum":
+                    $validator_checks['x_data' . $x]['enum'] = array($data_type['enum1'], $data_type['enum2'], $data_type['enum3'], 'column' => 'shortname');
+                    break;
+                case "special":
+                    if ($data_type["unique_name"] == "Precedent - ARRL November Sweepstakes") $validator_checks['x_data' . $x]['special'] = "NovSSPrec";
+                    break;
+                default:
+                    $this->errors['data' . $x] = $data_type["longname"] . " is not a recognized type.";
             }
         }
 
+        $validator_append = array('assisted_cat' => array('required' => ($contest_temp['assisted_flag'] == "Y"), 'enum' => array('assisted_cat', 'column' => 'longname')),
+                                  'band_cat' => array('required' => $contest_temp['band_flag'] == "Y", 'enum' => array('band_cat', 'column' => 'longname')),
+                                  'mode_cat' => array('required' => $contest_temp['mode_flag'] == "Y", 'enum' => array('mode_cat', 'column' => 'longname')),
+                                  'operator_cat' => array('required' => $contest_temp['operator_flag'] == "Y", 'enum' => array('operator_cat', 'column' => 'longname')),
+                                  'power' => array('required' => $contest_temp['power_flag'] == "Y", 'enum' => array('power', 'column' => 'longname')),
+                                  'station_cat' => array('required' => $contest_temp['station_flag'] == "Y", 'enum' => array('station_cat', 'column' => 'longname')),
+                                  'time_cat' => array('required' => $contest_temp['time_flag'] == "Y", 'enum' => array('time_cat', 'column' => 'longname')),
+                                  'transmitter_cat' => array('required' => $contest_temp['transmitter_flag'] == "Y", 'enum' => array('transmitter_cat', 'column' => 'longname')),
+                                  'overlay_cat' => array('required' => $contest_temp['overlay_flag'] == "Y", 'enum' => array('overlay_cat', 'column' => 'longname')),
+                                  'operators' => array('required' => false),
+                                  'club' => array('required' => false),
+                                  'name' => array('required' => false),
+                                  'address' => array('required' => false),
+                                  'addresscity' => array('required' => false),
+                                  'addressstate' => array('required' => false),
+                                  'addresszip' => array('required' => false),
+                                  'addresscountry' => array('required' => false));
 
-        // Now for the Required Parameters
-        if ($contest_temp['assisted_flag'] == "Y") {
-            if (!$_POST['data10'])
-                $this->errors[] = "Assisted Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='assisted_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data10']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Assisted Category is not in the right format.";
-                else $this->good_data["assisted_cat"] = $_POST['data10'];
-            }
-        }
-        if ($contest_temp['band_flag'] == "Y") {
-            if (!$_POST['data11'])
-                $this->errors[] = "Band Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='band_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data11']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Band Category is not in the right format.";
-                else $this->good_data["band_cat"] = $_POST['data11'];
-            }
-        }
-        if ($contest_temp['mode_flag'] == "Y") {
-            if (!$_POST['data12'])
-                $this->errors[] = "Mode Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='mode_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data12']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Mode Category is not in the right format.";
-                else $this->good_data["mode_cat"] = $_POST['data12'];
-            }
-        }
-        if ($contest_temp['operator_flag'] == "Y") {
-            if (!$_POST['data13'])
-                $this->errors[] = "Operator Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='operator_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data13']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Operator Category is not in the right format.";
-                else $this->good_data["operator_cat"] = $_POST['data13'];
-            }
-        }
-        if ($contest_temp['power_flag'] == "Y") {
-            if (!$_POST['data14'])
-                $this->errors[] = "Power Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='power_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data14']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Power Category is not in the right format.";
-                else $this->good_data["power_cat"] = $_POST['data14'];
-            }
-        }
-        if ($contest_temp['station_flag'] == "Y") {
-            if (!$_POST['data15'])
-                $this->errors[] = "Station Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='station_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data15']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Station Category is not in the right format.";
-                else $this->good_data["station_cat"] = $_POST['data15'];
-            }
-        }
-        if ($contest_temp['time_flag'] == "Y") {
-            if (!$_POST['data16'])
-                $this->errors[] = "Time Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='time_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data16']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Time Category is not in the right format.";
-                else $this->good_data["time_cat"] = $_POST['data16'];
-            }
-        }
-        if ($contest_temp['transmitter_flag'] == "Y") {
-            if (!$_POST['data17'])
-                $this->errors[] = "Transmitter Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='transmitter_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data17']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Transmitter Category is not in the right format.";
-                else $this->good_data["transmitter_cat"] = $_POST['data17'];
-            }
-        }
-        if ($contest_temp['overlay_flag'] == "Y") {
-            if (!$_POST['data18'])
-                $this->errors[] = "Overlay Category does not exist.";
-            else {
-                $query = $this->db_connection->query("SELECT * 
-                                                      FROM hamcontest.enum_values 
-                                                      WHERE enum_type='overlay_cat' 
-                                                      AND longname = '" . $this->db_connection->real_escape_string($_POST['data18']) . "'");
-                $enum_value = $query->fetch_assoc();
-                if (!$enum_value)
-                    $this->errors[] = "Overlay Category is not in the right format.";
-                else $this->good_data["overlay_cat"] = $_POST['data18'];
-            }
-        }
-
-        // Now for the Entrant's Data
-        if ($contest_temp['personal_flag'] == "Y") {
-             if (!$_POST['data20'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data20'])))
-                 $this->errors[] = "Operators is not in the right format.";
-             else $this->good_data["operators"] = $_POST['data20'];
-
-             if (!$_POST['data21'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data21'])))
-                 $this->errors[] = "Club is not in the right format.";
-             else $this->good_data["club"] = $_POST['data21'];
-
-             if (!$_POST['data22'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data22'])))
-                 $this->errors[] = "Name is not in the right format.";
-             else $this->good_data["name"] = $_POST['data22'];
-
-             if (!$_POST['data23'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data23'])))
-                 $this->errors[] = "Address is not in the right format.";
-             else $this->good_data["address"] = $_POST['data23'];
-
-             if (!$_POST['data24'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data24'])))
-                 $this->errors[] = "City is not in the right format.";
-             else $this->good_data["addresscity"] = $_POST['data24'];
-
-             if (!$_POST['data25'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data25'])))
-                 $this->errors[] = "State is not in the right format.";
-             else $this->good_data["addressstate"] = $_POST['data25'];
-
-             if (!$_POST['data26'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data26'])))
-                 $this->errors[] = "Postal Code is not in the right format.";
-             else $this->good_data["addresszip"] = $_POST['data26'];
-
-             if (!$_POST['data27'] && !preg_match('/[\x20-\x7E]*/', strtoupper($_POST['data27'])))
-                 $this->errors[] = "Country is not in the right format.";
-             else $this->good_data["addresscountry"] = $_POST['data27'];
-        }
+        $validator_checks = array_merge($validator_checks, $validator_append);
+        $validate = new Validation("SentData", $_POST, $validator_checks);
+        $this->errors = array_merge($validate->errors, $this->errors);
+        $this->good_data = array_merge($validate->good_data, $this->good_data);
     }
     private function writeData()
     {
@@ -367,29 +116,17 @@ class SentData
         $contest_name_id = $this->good_data['contest_name_id'];
         if ($this->good_data['contest_id'] < 0)
         {
-            $sql = "INSERT INTO hamcontest.master_list (contest_name_id, contest_date) VALUES (" . $this->db_connection->real_escape_string($contest_name_id) . ", now())";
-            $query = $this->db_connection->real_query($sql);
+            $query = $this->sql->sql(array("table" => "master_list"))->insert(array('contest_name_id' => $contest_name_id, "contest_date" => date()));
             if (!$query)
                 $this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';
             else
-                $contest_id = $this->db_connection->insert_id;
+                $contest_id = $query;
         }
         if ($contest_id < 0)
             return;
         unset($this->good_data['contest_id']);
         unset($this->good_data['contest_name_id']);
-        $sql = "";
-        $firstItem = true;
-        foreach ($this->good_data as $key => $value)
-        {
-            if ($firstItem)
-                $firstItem = false;
-            else
-                $sql = $sql . ", ";
-            $sql = $sql . $key . "='" . $this->db_connection->real_escape_string($value) . "'";
-        }
-        $sql = "UPDATE hamcontest.master_list SET " . $sql . " WHERE contest_id = " . $this->db_connection->real_escape_string($contest_id);
-        $query = $this->db_connection->real_query($sql);
+        $query = $this->sql->sql(array("table" => "master_list"))->update($this->good_data, array('contest_id' => $contest_id));
         if (!$query)
             $this->errors[] = 'Cannot populate the contest. Please contact Database Administrator.';
 
@@ -410,6 +147,19 @@ class SentData
         {
             if ($value['contest_name_id'] == $this->good_data['contest_name_id'])
             {
+                $params = array();
+                $params['band_cat'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => "band_cat"));
+                $params['mode_cat'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => "mode_cat"));
+                for ($x = 1; $x <= 5; $x++)
+                {
+                    $dt = $contestList['type_data' . $x];
+                    $query = $this->sql->sql(array("table" => "data_type", "fetchall" => false))->select(array("data_type_id" => $dt));
+                    if ($query['data_type'] != "enum") continue;
+                    if (array_key_exists("enum1", $query)) $params['enum1'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => $query['enum1']));
+                    if (array_key_exists("enum2", $query)) $params['enum2'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => $query['enum2']));
+                    if (array_key_exists("enum3", $query)) $params['enum3'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => $query['enum3']));
+                }
+                setcookie('enumValues', json_encode($params), time() + (86400 * 30), '/');
                 setcookie('contestList', json_encode($value), time() + (86400 * 30), '/');
                 break;
             }

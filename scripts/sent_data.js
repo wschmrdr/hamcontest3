@@ -106,17 +106,17 @@ $("document").ready( function() {
             switch (dataType["data_type"])
             {
                 case "enum":
-                    if ($("select#data" + x).val() == '')
+                    if ($("select#x_data" + x).val() == '')
                     {
-                        ($("#data" + x + "_required").html("REQUIRED").fadeOut(1600));
+                        ($("#x_data" + x + "_required").html("REQUIRED").fadeOut(1600));
                         event.preventDefault();
                     }
                     break;
                 case "special":
                     if (dataType['unique_name'] == "Precedent - ARRL November Sweepstakes")
-                        if ($("select#data" + x).val() == '')
+                        if ($("select#x_data" + x).val() == '')
                         {
-                            ($("#data" + x + "_required").html("REQUIRED").fadeOut(1600));
+                            ($("#x_data" + x + "_required").html("REQUIRED").fadeOut(1600));
                             event.preventDefault();
                         }
                     break;
@@ -124,12 +124,13 @@ $("document").ready( function() {
         }
         // Now Contest Parameters
         // These will only display if they are required
-        for (var x = 10; x < 19; x++)
+        var fields = ["assisted_cat", "band_cat", "mode_cat", "operator_cat", "power", "station_cat", "time_cat", "transmitter_cat", "overlay_cat"];
+        for (var x in fields)
         {
-            if ($("#data" + x).length == 0) continue;
-            if ($("select#data" + x).val() == '')
+            if ($("#" + x).length == 0) continue;
+            if ($("select#" + x).val() == '')
             {
-                ($("#data" + x + "_required").html("REQUIRED").fadeOut("slow"));
+                ($("#" + x + "_required").html("REQUIRED").fadeOut("slow"));
                 event.preventDefault();
                 return;
             }
@@ -147,7 +148,7 @@ var instanceSelected = function(contestInstanceId) {
     var value = "";
     if (instance) value = instance['callsign'];
     else value = getCookie('username');
-    $("#otherdata").html(htmlLongText('data0', "Call Sign", value, true, "string") + "<br/>");
+    $("#otherdata").html(htmlLongText('callsign', "Call Sign", value, true, "string") + "<br/>");
     value = "";
     for (var x = 1; x < 6; x++)
     {
@@ -159,26 +160,26 @@ var instanceSelected = function(contestInstanceId) {
             switch (dataType['data_type'])
             {
                 case "string":
-                    $("#otherdata").html($("#otherdata").html() + htmlLongText('data' + x, dataType['long_name'], value, true, "string"));
+                    $("#otherdata").html($("#otherdata").html() + htmlLongText('x_data' + x, dataType['long_name'], value, true, "string"));
                     $("#otherdata").html($("#otherdata").html() + "<br/>");
                     break;
                 case "number":
-                    $("#otherdata").html($("#otherdata").html() + htmlLongText('data' + x, dataType['long_name'], value, true, "number"));
+                    $("#otherdata").html($("#otherdata").html() + htmlLongText('x_data' + x, dataType['long_name'], value, true, "number"));
                     $("#otherdata").html($("#otherdata").html() + "<br/>");
                     break;
                 case "enum":
-                    $("#otherdata").html($("#otherdata").html() + "<div id='data" + x + "'></div>");
-                    htmlLongEnum('data' + x, dataType['long_name'], [dataType['enum1'], dataType['enum2'], dataType['enum3']], value, []);
-                    $("#data" + x + "_required").html("");
+                    $("#otherdata").html($("#otherdata").html() + "<div id='x_data" + x + "'></div>");
+                    htmlLongEnum('x_data' + x, dataType['long_name'], [dataType['enum1'], dataType['enum2'], dataType['enum3']], value, []);
+                    $("#x_data" + x + "_required").html("");
                     break;
                 case "special":
                     if (dataType['unique_name'] == "Precedent - ARRL November Sweepstakes")
                     {
                         $("#otherdata").html($("#otherdata").html() + htmlLongNovSSPrecedent(x));
-                        $("#data" + x + " option[value='" + value + "']").attr("selected", "selected");
+                        $("#x_data" + x + " option[value='" + value + "']").attr("selected", "selected");
                     }
                     $("#otherdata").html($("#otherdata").html() + "<br/>");
-                    $("#data" + x + "_required").html("");
+                    $("#x_data" + x + "_required").html("");
                     break;
             }
         }
@@ -187,98 +188,98 @@ var instanceSelected = function(contestInstanceId) {
     if (contest['assisted_flag'] == "Y")
     {
         if (instance) value = instance["assisted_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data10'></div>");
-        htmlLongEnum('data10', "Assisted Category", ["assisted_cat"], value, []);
-        $("#data10_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='assisted_cat'></div>");
+        htmlLongEnum('assisted_cat', "Assisted Category", ["assisted_cat"], value, []);
+        $("#assisted_cat_required").html("");
     }
     if (contest['band_flag'] == "Y")
     {
         if (instance) value = instance["band_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data11'></div>");
-        htmlLongEnum('data11', "Band Category", ["band_cat"], value, []);
-        $("#data11_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='band_cat'></div>");
+        htmlLongEnum('band_cat', "Band Category", ["band_cat"], value, []);
+        $("#band_cat_required").html("");
     }
     if (contest['mode_flag'] == "Y")
     {
         if (instance) value = instance["mode_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data12'></div>");
-        htmlLongEnum('data12', "Mode Category", ["mode_cat"], value, []);
-        $("#data12_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='mode_cat'></div>");
+        htmlLongEnum('mode_cat', "Mode Category", ["mode_cat"], value, []);
+        $("#mode_cat_required").html("");
     }
     if (contest['operator_flag'] == "Y")
     {
         if (instance) value = instance["operator_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data13'></div>");
-        htmlLongEnum('data13', "Operator Category", ["operator_cat"], value, []);
-        $("#data13_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='operator_cat'></div>");
+        htmlLongEnum('operator_cat', "Operator Category", ["operator_cat"], value, []);
+        $("#operator_cat_required").html("");
     }
     if (contest['power_flag'] == "Y")
     {
         if (instance) value = instance["power"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data14'></div>");
-        htmlLongEnum('data14', "Power Category", ["power"], value, []);
-        $("#data14_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='power'></div>");
+        htmlLongEnum('power', "Power Category", ["power"], value, []);
+        $("#power_required").html("");
     }
     if (contest['station_flag'] == "Y")
     {
         if (instance) value = instance["station_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data15'></div>");
-        htmlLongEnum('data15', "Station Category", ["station_cat"], value, []);
-        $("#data15_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='station_cat'></div>");
+        htmlLongEnum('station_cat', "Station Category", ["station_cat"], value, []);
+        $("#station_cat_required").html("");
     }
     if (contest['time_flag'] == "Y")
     {
         if (instance) value = instance["time_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data16'></div>");
-        htmlLongEnum('data16', "Time Category", ["time_cat"], value, []);
-        $("#data16_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='time_cat'></div>");
+        htmlLongEnum('time_cat', "Time Category", ["time_cat"], value, []);
+        $("#time_cat_required").html("");
     }
     if (contest['transmitter_flag'] == "Y")
     {
         if (instance) value = instance["transmitter_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data17'></div>");
-        htmlLongEnum('data17', "Transmitter Category", ["transmitter_cat"], value, []);
-        $("#data17_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='transmitter_cat'></div>");
+        htmlLongEnum('transmitter_cat', "Transmitter Category", ["transmitter_cat"], value, []);
+        $("#transmitter_cat_required").html("");
     }
     if (contest['overlay_flag'] == "Y")
     {
         if (instance) value = instance["overlay_cat"];
-        $("#contestparams").html($("#contestparams").html() + "<div id='data18'></div>");
-        htmlLongEnum('data18', "Overlay Category", ["overlay_cat"], value, []);
-        $("#data18_required").html("");
+        $("#contestparams").html($("#contestparams").html() + "<div id='overlay_cat'></div>");
+        htmlLongEnum('overlay_cat', "Overlay Category", ["overlay_cat"], value, []);
+        $("#overlay_cat_required").html("");
     }
     if (contest['personal_flag'] == "Y")
     {
-        $("#contestparams").html($("#contestparams").html() + "<div id='data20'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='operators'></div>");
         if (instance) value = instance['operators'];
-        $("#data20").html(htmlLongText('data20', "Operators", value, false, "string"));
+        $("#operators").html(htmlLongText('operators', "Operators", value, false, "string"));
         
-        $("#contestparams").html($("#contestparams").html() + "<div id='data21'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='club'></div>");
         if (instance) value = instance['club'];
-        $("#data21").html(htmlLongText('data21', "Club", value, false, "string"));
+        $("#club").html(htmlLongText('club', "Club", value, false, "string"));
         
-        $("#contestparams").html($("#contestparams").html() + "<div id='data22'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='name'></div>");
         if (instance) value = instance['name'];
-        $("#data22").html(htmlLongText('data22', "Name", value, false, "string"));
+        $("#name").html(htmlLongText('name', "Name", value, false, "string"));
 
-        $("#contestparams").html($("#contestparams").html() + "<div id='data23'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='address'></div>");
         if (instance) value = instance['address'];
-        $("#data23").html(htmlLongText('data23', "Address", value, false, "string"));
+        $("#address").html(htmlLongText('address', "Address", value, false, "string"));
         
-        $("#contestparams").html($("#contestparams").html() + "<div id='data24'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='addresscity'></div>");
         if (instance) value = instance['addresscity'];
-        $("#data24").html(htmlLongText('data24', "City", value, false, "string"));
+        $("#addresscity").html(htmlLongText('addresscity', "City", value, false, "string"));
         
-        $("#contestparams").html($("#contestparams").html() + "<div id='data25'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='addressstate'></div>");
         if (instance) value = instance['addressstate'];
-        $("#data25").html(htmlLongText('data25', "State", value, false, "string"));
+        $("#addressstate").html(htmlLongText('addressstate', "State", value, false, "string"));
         
-        $("#contestparams").html($("#contestparams").html() + "<div id='data26'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='addresszip'></div>");
         if (instance) value = instance['addresszip'];
-        $("#data26").html(htmlLongText('data26', "Postal Code", value, false, "string"));
+        $("#addresszip").html(htmlLongText('addresszip', "Postal Code", value, false, "string"));
         
-        $("#contestparams").html($("#contestparams").html() + "<div id='data27'></div>");
+        $("#contestparams").html($("#contestparams").html() + "<div id='addresscountry'></div>");
         if (instance) value = instance['addresscountry'];
-        $("#data27").html(htmlLongText('data27', "Country", value, false, "string"));
+        $("#addresscountry").html(htmlLongText('addresscountry', "Country", value, false, "string"));
     }
 }

@@ -40,7 +40,7 @@ var isValidCall = function(callsign) {
     var call_array = callsign.split("/");
     for (var x in call_array)
     {
-        if (x === x.toUpperCase().match(/[A-Z0-9]{1,3}[0-9]{1}[A-Z0-9]{1,3}/g)) return true;
+        if (call_array[x] == call_array[x].toUpperCase().match(/[A-Z0-9]{1,3}[0-9]{1}[A-Z0-9]{1,3}/g)) return true;
     }
     return false;
 }

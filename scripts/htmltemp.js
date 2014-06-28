@@ -16,6 +16,16 @@ function htmlLongText(dataNum, label, value, required, type) {
     s = s2 + "<input " + s + " />";
     return s;
 }
+function htmlLongUpper(dataNum, label, value, required) {
+    var s2 = "<label for='" + dataNum + "'>" + label + "</label>";
+    var s = "id='" + dataNum + "' type='text' name='" + dataNum + "' value='" + value + "' style='text-transform:uppercase;' pattern=/[\x20-\x7E]*/g";
+    if (required)
+    {
+        s += " required";
+    }
+    s = s2 + "<input " + s + " />";
+    return s;
+}
 function enumGather(htmlField, enumlist, listindex, s, value, omit) {
     if (!enumlist[listindex])
     {
@@ -66,8 +76,8 @@ function htmlLongEnum(htmlField, label, enumlist, value, omit) {
     enumGather(htmlField, enumlist, 0, s, value, omit);
 }
 function htmlLongNovSSPrecedent(dataNum) {
-    var s = "<label for='data" + dataNum + "'>Precedent</label>";
-    s +=    "<select id='data" + dataNum + "' name='data" + dataNum + "'>";
+    var s = "<label for='x_data" + dataNum + "'>Precedent</label>";
+    s +=    "<select id='x_data" + dataNum + "' name='x_data" + dataNum + "'>";
     s +=        "<option value=''>Select...</option>";
     s +=        "<option value='A'>A - Single-Op, Unassisted, Low Power</option>";
     s +=        "<option value='B'>B - Single-Op, Unassisted, High Power</option>";
@@ -78,6 +88,6 @@ function htmlLongNovSSPrecedent(dataNum) {
     s +=        "<option value='W'>M - Multi-Op, Assisted, Low Power</option>";
     s +=        "<option value='S'>S - School</option>";
     s +=    "</select>";
-    s +=    "<span id='data" + dataNum + "_required'></span>";
+    s +=    "<span id='x_data" + dataNum + "_required'></span>";
     return s;
 }
