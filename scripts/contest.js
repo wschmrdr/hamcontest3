@@ -83,14 +83,14 @@ $(document).ready( function() {
     {
         if (contestList['band_flag'] != "Y")
         {
-            $("#frequency").html(htmlLongEnum('frequency', 'Band', ["band_cat"], "", ['ALL']));
+            $("#frequency").html(htmlLongEnum({htmlField: 'frequency', label: 'Band', enumlist: ["band_cat"], value: "", omit: ['ALL'] }));
         }
     }
     if (!$("#contactmode").html())
     {
         if (contestList['mode_flag'] != "Y")
         {
-            $("#contactmode").html(htmlLongEnum('contactmode', 'Mode', ["mode_cat"], "", ['MIXED']));
+            $("#contactmode").html(htmlLongEnum({htmlfield: 'contactmode', label: 'Mode', enumlist: ["mode_cat"], value: "", omit: ['MIXED']}));
         }
     }
     if (!$("#sectSelect").html())
@@ -251,6 +251,7 @@ function calculateScore(contacts, formula, endchars) {
                 case '3':
                 case '4':
                 case '5':
+                    var masterList = $.parseJSON(getCookie('masterList'));
                     var unique = {};
                     var distinct = [];
                     for ( var i in contacts )

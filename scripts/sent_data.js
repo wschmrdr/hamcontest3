@@ -169,7 +169,7 @@ var instanceSelected = function(contestInstanceId) {
                     break;
                 case "enum":
                     $("#otherdata").html($("#otherdata").html() + "<div id='x_data" + x + "'></div>");
-                    htmlLongEnum('x_data' + x, dataType['long_name'], [dataType['enum1'], dataType['enum2'], dataType['enum3']], value, []);
+                    htmlLongEnum({htmlField: 'x_data' + x, label: dataType['long_name'], enumlist: [dataType['enum1'], dataType['enum2'], dataType['enum3']], value: value, omit: []});
                     $("#x_data" + x + "_required").html("");
                     break;
                 case "special":
@@ -189,63 +189,63 @@ var instanceSelected = function(contestInstanceId) {
     {
         if (instance) value = instance["assisted_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='assisted_cat'></div>");
-        htmlLongEnum('assisted_cat', "Assisted Category", ["assisted_cat"], value, []);
+        htmlLongEnum({htmlField: 'assisted_cat', label: "Assisted Category", enumlist: ["assisted_cat"], value: value, omit: []});
         $("#assisted_cat_required").html("");
     }
     if (contest['band_flag'] == "Y")
     {
         if (instance) value = instance["band_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='band_cat'></div>");
-        htmlLongEnum('band_cat', "Band Category", ["band_cat"], value, []);
+        htmlLongEnum({htmlField: 'band_cat', label: "Band Category", enumlist: ["band_cat"], value: value, omit: []});
         $("#band_cat_required").html("");
     }
     if (contest['mode_flag'] == "Y")
     {
         if (instance) value = instance["mode_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='mode_cat'></div>");
-        htmlLongEnum('mode_cat', "Mode Category", ["mode_cat"], value, []);
+        htmlLongEnum({htmlField: 'mode_cat', label: "Mode Category", enumlist: ["mode_cat"], value: value, omit: []});
         $("#mode_cat_required").html("");
     }
     if (contest['operator_flag'] == "Y")
     {
         if (instance) value = instance["operator_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='operator_cat'></div>");
-        htmlLongEnum('operator_cat', "Operator Category", ["operator_cat"], value, []);
+        htmlLongEnum({htmlField: 'operator_cat', label: "Operator Category", enumlist: ["operator_cat"], value: value, omit: []});
         $("#operator_cat_required").html("");
     }
     if (contest['power_flag'] == "Y")
     {
         if (instance) value = instance["power"];
         $("#contestparams").html($("#contestparams").html() + "<div id='power'></div>");
-        htmlLongEnum('power', "Power Category", ["power"], value, []);
+        htmlLongEnum({htmlField: 'power', label: "Power Category", enumlist: ["power"], value: value, omit: []});
         $("#power_required").html("");
     }
     if (contest['station_flag'] == "Y")
     {
         if (instance) value = instance["station_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='station_cat'></div>");
-        htmlLongEnum('station_cat', "Station Category", ["station_cat"], value, []);
+        htmlLongEnum({htmlField: 'station_cat', label: "Station Category", enumlist: ["station_cat"], value: value, omit: []});
         $("#station_cat_required").html("");
     }
     if (contest['time_flag'] == "Y")
     {
         if (instance) value = instance["time_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='time_cat'></div>");
-        htmlLongEnum('time_cat', "Time Category", ["time_cat"], value, []);
+        htmlLongEnum({htmlField: 'time_cat', label: "Time Category", enumlist: ["time_cat"], value: value, omit: []});
         $("#time_cat_required").html("");
     }
     if (contest['transmitter_flag'] == "Y")
     {
         if (instance) value = instance["transmitter_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='transmitter_cat'></div>");
-        htmlLongEnum('transmitter_cat', "Transmitter Category", ["transmitter_cat"], value, []);
+        htmlLongEnum({htmlField: 'transmitter_cat', label: "Transmitter Category", enumlist: ["transmitter_cat"], value: value, omit: []});
         $("#transmitter_cat_required").html("");
     }
     if (contest['overlay_flag'] == "Y")
     {
         if (instance) value = instance["overlay_cat"];
         $("#contestparams").html($("#contestparams").html() + "<div id='overlay_cat'></div>");
-        htmlLongEnum('overlay_cat', "Overlay Category", ["overlay_cat"], value, []);
+        htmlLongEnum({htmlField: 'overlay_cat', label: "Overlay Category", enumlist: ["overlay_cat"], value: value, omit: []});
         $("#overlay_cat_required").html("");
     }
     if (contest['personal_flag'] == "Y")

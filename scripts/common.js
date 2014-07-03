@@ -34,6 +34,19 @@ var getObject = function(cookie_name, id) {
     }
     return null;
 }
+var getObjectByAttribute = function(cookie_name, attr, value) {
+    var list = getCookie(cookie_name);
+    if (!list) return null;
+    list = $.parseJSON(list);
+    var unique_id = "";
+    if (!unique_id) return null;
+    for (var x in list)
+    {
+        if (list[x][attr] == value)
+            return list[x];
+    }
+    return null;
+}
 
 var isValidCall = function(callsign) {
     if (!callsign || 0 === callsign.length) return false;

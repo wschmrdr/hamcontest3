@@ -152,7 +152,8 @@ class SentData
                 $params['mode_cat'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => "mode_cat"));
                 for ($x = 1; $x <= 5; $x++)
                 {
-                    $dt = $contestList['type_data' . $x];
+                    $dt = $value['type_data' . $x];
+                    if ($dt <= 0) continue;
                     $query = $this->sql->sql(array("table" => "data_type", "fetchall" => false))->select(array("data_type_id" => $dt));
                     if ($query['data_type'] != "enum") continue;
                     if (array_key_exists("enum1", $query)) $params['enum1'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => $query['enum1']));
