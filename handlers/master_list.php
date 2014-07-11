@@ -2,21 +2,10 @@
     if (isset($_GET['id']) && !empty($_GET['id']))
     {
         session_start();
-        include('../../config/db.php');
-
-        $db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        $db_connection->set_charset("utf8");
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
+       
+        $sql = new SQLfunction();
         $contest_id = $_GET['id'];
-        $sql = $db_connection->query("SELECT * 
-                                      FROM hamcontest.master_list 
-                                      WHERE contest_name_id='" . $db_connection->real_escape_string($contest_id) . "'
-                                      AND callsign='" . $db_connection->real_escape_string(strtoupper($_SESSION['user_name'])) . "'");
-        $rows = array();
-        if ($sql->num_rows > 0)
-        {
-            while($r = $sql->fetch_array(MYSQL_ASSOC)) {
-                $rows[] = $r;
-            }
-        }
+        $rows = $sql->sql(array("table" => 'master_list'))->select(array("contest_name_id" => $contest_id, "callsign" => strtoupper($_SESSION['user_name'])));
         echo json_encode($rows);
     }

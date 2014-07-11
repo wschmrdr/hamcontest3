@@ -38,7 +38,7 @@ class SentData
         if (array_key_exists('contest_name', $validate->good_data)) $this->good_data['contest_name_id'] = $validate->good_data['contest_name'];
         if (array_key_exists('contest_instance', $validate->good_data)) $this->good_data['contest_id'] = $validate->good_data['contest_instance'];
 
-        $contest_temp = $this->sql->sql(array("db" => "hamcontest", "table" => "contest_list", "fetchall" => false))->select(array('contest_name_id' => $this->good_data['contest_name_id']));
+        $contest_temp = $this->sql->sql(array("table" => "contest_list", "fetchall" => false))->select(array('contest_name_id' => $this->good_data['contest_name_id']));
         if (!$contest_temp) {
             $this->errors[] = "Contest does not exist. Please contact administrator.";
             return;

@@ -1,5 +1,4 @@
 <?php
-
 class SQLfunction
 {
     private $db_connection = null;

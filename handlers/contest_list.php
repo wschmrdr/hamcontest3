@@ -2,15 +2,8 @@
     if (isset($_GET['contest_list']))
     {
         session_start();
-        include('../../config/db.php');
-        
-        $db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        $db_connection->set_charset("utf8");
-
-        $sql = $db_connection->query("SELECT * FROM hamcontest.contest_list");
-        $rows = array();
-        while($r = $sql->fetch_array(MYSQL_ASSOC)) {
-            $rows[] = $r;
-        }
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
+        $sql = new SQLfunction();        
+        $rows = $sql->sql(array("table" => "contest_list"))->select();
         echo json_encode($rows);
     }

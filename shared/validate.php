@@ -92,7 +92,7 @@ class Validation
         $column_name = $enum_array['column'];
         unset($enum_array['column']);
         $sql = new SQLfunction();
-        $data_type = $sql->sql(array("db" => "hamcontest", "table" => "enum_values", "fetchall" => false))->select(array('enum_type' => $sql->sqlIN($enum_array), $column_name => $data[$key]));
+        $data_type = $sql->sql(array("table" => "enum_values", "fetchall" => false))->select(array('enum_type' => $sql->sqlIN($enum_array), $column_name => $data[$key]));
         if (!$data_type) $this->errors[$key] = "Validation for " . $this->caller_function . ": Key " . $key . " is not of this enum type.";
     }
     private function val_NovSSPrec($data, $key, $entry)
