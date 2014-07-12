@@ -8,7 +8,7 @@ CREATE TABLE data_type (
     enum2 varchar(30),
     enum3 varchar(30),
     max_length smallint unsigned,
-    double_entry bit(1),
-    sent_data bit(1),
+    double_entry char(1),
+    sent_data char(1),
     PRIMARY KEY (data_type_id)
 );

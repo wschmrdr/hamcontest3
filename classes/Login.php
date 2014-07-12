@@ -6,27 +6,16 @@
  */
 class Login
 {
-    /**
-     * @var object The database connection
-     */
-    private $db_connection = null;
-    /**
-     * @var array Collection of error messages
-     */
+    private $sql = null;
     public $errors = array();
-    /**
-     * @var array Collection of success / neutral messages
-     */
     public $messages = array();
 
-    /**
-     * the function "__construct()" automatically starts whenever an object of this class is created,
-     * you know, when you do "$login = new Login();"
-     */
     public function __construct()
     {
         // create/read session, absolutely necessary
         session_start();
+        require_once($_SERVER['DOCUMENT_ROOT'] . "/shared/sqlio.php");
+        $this->sql = new SQLfunction();
 
         // check the possible login actions:
         // if user tried to log out (happen when user clicks logout button)
@@ -50,64 +39,33 @@ class Login
         } elseif (empty($_POST['user_password'])) {
             $this->errors[] = "Password field was empty.";
         } elseif (!empty($_POST['user_name']) && !empty($_POST['user_password'])) {
+            // database query, getting all the info of the selected user (allows login via email address in the
+            // username field)
+            $result = $this->sql->sql(array("table" => "users", "fetchall" => false))->select(array("user_name" => $_POST['user_name']));
 
-            // create a database connection, using the constants from config/db.php (which we loaded in index.php)
-            $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-
-            // change character set to utf8 and check it
-            if (!$this->db_connection->set_charset("utf8")) {
-                $this->errors[] = $this->db_connection->error;
-            }
-
-            // if no connection errors (= working database connection)
-            if (!$this->db_connection->connect_errno) {
-
-                // escape the POST stuff
-                $user_name = $this->db_connection->real_escape_string($_POST['user_name']);
-
-                // database query, getting all the info of the selected user (allows login via email address in the
-                // username field)
-                $sql = "SELECT userid, username, email, password
-                        FROM members
-                        WHERE username = '" . $user_name . "' OR email = '" . $user_name . "';";
-                $result_of_login_check = $this->db_connection->query($sql);
-
-                // if this user exists
-                if ($result_of_login_check->num_rows == 1) {
-
-                    // get result row (as an object)
-                    $result_row = $result_of_login_check->fetch_object();
-
-                    if ($this->checkbrute($result_row->userid, $this->db_connection) == false) {
+            if ($this->checkbrute($result['user_id']) == false) {
                         // using PHP 5.5's password_verify() function to check if the provided password fits
                         // the hash of that user's password
-                        if (password_verify($_POST['user_password'], $result_row->password)) {
+                        if (password_verify($_POST['user_password'], $result['user_password_hash'])) {
 
                             // write user data into PHP SESSION (a file on your server)
-                            $_SESSION['user_name'] = $result_row->username;
-                            $_SESSION['user_email'] = $result_row->email;
+                            $_SESSION['user_name'] = $result['user_name'];
+                            $_SESSION['user_email'] = $result['user_email'];
                             $_SESSION['user_login_status'] = 1;
-                            setcookie('username', strtoupper($result_row->username), time() + (86400 * 30), '/');
+                            setcookie('username', strtoupper($result['user_name']), time() + (86400 * 30), '/');
 
                         } else {
                             $now = time();
-                            $this->db_connection->query("INSERT INTO login_attempts(user_id, time)
-                                                                    VALUES ('$result_row->userid', '$now')");
+                            $this->sql->sql(array("table" => "login_attempts"))->insert(array("user_id" => $result['user_id'], "time" => $now));
                             $this->errors[] = "Wrong password. Try again.";
                         }
-                    } else {
-                        $this->errors[] = "Account locked. You must wait thirty minutes before trying again.";
-                    }
-                } else {
-                    $this->errors[] = "This user does not exist.";
-                }
             } else {
-                $this->errors[] = "Database connection problem.";
+                $this->errors[] = "Account locked. You must wait thirty minutes before trying again.";
             }
         }
     }
 
-    private function checkbrute($user_id, $mysqli) 
+    private function checkbrute($user_id) 
     {
         // Get timestamp of current time 
         $now = time();
@@ -115,14 +73,10 @@ class Login
         // All login attempts are counted from the past 2 hours. 
         $valid_attempts = $now - (30 * 60);
 
-        $sql = "SELECT time
-                FROM login_attempts
-                WHERE user_id = '" . $user_id . "'
-                AND time > '" . $valid_attempts . "'";
-        $stmt = $this->db_connection->query($sql);
+        $result = $this->sql->sql(array("table" => "login_attempts", "columns" => array("time")))->select(array("user_id" => $user_id, "time" => $valid_attempts));
 
         // If there have been more than 5 failed logins, return positive error.
-        return ($stmt->num_rows >= 5);
+        return (count($result) >= 5);
     }
     /**
      * perform the logout

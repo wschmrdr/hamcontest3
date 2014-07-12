@@ -24,6 +24,7 @@ CREATE TABLE contest_list (
     transmitter_flag char(1),
     overlay_flag char(1),
     personal_flag char(1),
+    score_formula varchar(50),
     PRIMARY KEY (contest_name_id)
 );
 
