@@ -171,8 +171,12 @@ function updateContactListDisplay(contacts) {
     option.value = option.text = contact_list_string;
     option.disabled = true;
     document.getElementsByName("contactList")[0].add(option);
+    var dupeList = [];
     for (var x in contacts)
     {
+        var dupeCheck = { callsign : contacts[x]['recvcall'] };
+        if (contestList['freq_dupe_flag'] == "Y") dupeCheck['frequency'] = contacts[x]['frequency'];
+        if (contestList['mode_dupe_flag'] == "Y") dupeCheck['contactmode'] = contacts[x]['contactmode'];
         var contact_string = "";
         contact_string += contacts[x]['frequency'].pad(5, " ", 0) + " "
                         + contacts[x]['contactmode'].pad(2, " ", 0) + " "
@@ -197,12 +201,15 @@ function updateContactListDisplay(contacts) {
                 else var max_length = dataType['max_length'];
                 var s = contacts[x]['recvdata' + y];
                 contact_string += " " + s.pad(max_length, " ", 1);
+                if (contestList['data' + y + '_dupe_flag'] == "Y") dupeCheck['recvdata' + y] = contacts[x]['recvdata' + y];
             }
         }
         var option = document.createElement('option');
         option.text = contact_string;
         document.getElementsByName("contactList")[0].add(option);
+        dupeList.push(dupeCheck);
     }
+    document.cookie = "dupeList=" + JSON.stringify(dupeList);
 }
 
 function updateScoreDisplay(contacts) {
@@ -390,4 +397,8 @@ var enterNewContact = function(e) {
 
 var checkPotentialDupes = function() {
     console.log("Key Press triggered.");
+    var dupeList = $.parseJSON(getCookie('dupeList'));
+    for (var x in dupeList)
+    {
+    }
 }
