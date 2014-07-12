@@ -15,6 +15,7 @@ class SQLfunction
         $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         if (!$this->db_connection->set_charset("utf8")) throw new Exception($this->db_connection->error);
         if ($this->db_connection->connect_errno) throw new Exception("Cannot connect to database.");
+        $this->db_db = DB_NAME;
     }
 
     private function update_db($db)
@@ -71,7 +72,7 @@ class SQLfunction
         return $this;
     }
 
-    public function select($where)
+    public function select($where = array())
     {
         $sql_string = "SELECT " . $this->db_columns .
                       " FROM " . $this->db_db . "." .
@@ -102,7 +103,7 @@ class SQLfunction
         $this->log_data($sql_string);
         return ($this->db_connection->query($sql_string)) ? $this->db_connection->insert_id : false;
     }
-    public function update($data, $where)
+    public function update($data, $where = array())
     {
         $sql_string = "UPDATE " . $this->db_db . "." . $this->db_table . " SET ";
         $first_pass = true;

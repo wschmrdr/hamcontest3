@@ -35,7 +35,7 @@ class StartApp
     private function checkContestInstance()
     {
         // Check for a Contest Entry
-        $result = $this->sql->sql(array("table" => "master_list", "columns" => array("contest", "year", "callsign"))->select(array('contest' => $_SESSION['contest_name'], 'year' => 'year(now())', 'callsign' => $_SESSION['user_name']));
+        $result = $this->sql->sql(array("table" => "master_list", "columns" => array("contest", "year", "callsign")))->select(array('contest' => $_SESSION['contest_name'], 'year' => 'year(now())', 'callsign' => $_SESSION['user_name']));
 
         // If it doesn't exist, go to sentData
         if (!$result) return 0;
