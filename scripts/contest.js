@@ -6,7 +6,7 @@ $(document).ready( function() {
     if (!$("#dataEntry").html())
     {
         var callAdded = false;
-        var s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(); return false;'>";
+        var s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(event); return false;'>";
         var double_index = 0;
         for (var x = 1; x < 6; x++)
         {
@@ -102,7 +102,7 @@ $(document).ready( function() {
     }
     updateDisplay();
 
-    $("#recvcall").keypress(function() { console.log("Key Press triggered."); });
+    $("#recvcall").keypress(checkPotentialDupes());
     $("#recvcall").focusout(function() { console.log("Focus off triggered."); });
     $("#download").click(function() { console.log("Download triggered."); });
     $("#prefs").click(function() { console.log("Preferences triggered."); });
@@ -328,8 +328,8 @@ function calculateScore(contacts, formula, endchars) {
     return {'iter' : iter, 'constant' : constant};
 }
 
-var enterNewContact = function() {
-    event.preventDefault();
+var enterNewContact = function(e) {
+    e.preventDefault();
     var masterList = $.parseJSON(getCookie('masterList'));
     // Check for Valid Contact
         // Dupe Check
@@ -386,4 +386,8 @@ var enterNewContact = function() {
         $("#recvdata" + x).val("");
     }
     updateDisplay();
+}
+
+var checkPotentialDupes = function() {
+    console.log("Key Press triggered.");
 }

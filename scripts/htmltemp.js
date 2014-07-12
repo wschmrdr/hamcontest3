@@ -11,14 +11,14 @@ function htmlLongText(dataNum, label, value, required, type) {
     }
     else if (type == "string")
     {
-        s += " pattern=/[\x20-\x7E]*/g";
+        s += ' pattern="[\x20-\x7E]*"';
     }
     s = s2 + "<input " + s + " />";
     return s;
 }
 function htmlLongUpper(dataNum, label, value, required) {
     var s2 = "<label for='" + dataNum + "'>" + label + "</label>";
-    var s = "id='" + dataNum + "' type='text' name='" + dataNum + "' value='" + value + "' style='text-transform:uppercase;' pattern=/[\x20-\x7E]*/g";
+    var s = "id='" + dataNum + "' type='text' name='" + dataNum + "' value='" + value + "' style='text-transform:uppercase;' pattern='[\x20-\x7E]*'";
     if (required)
     {
         s += " required";

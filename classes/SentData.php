@@ -116,7 +116,7 @@ class SentData
         $contest_name_id = $this->good_data['contest_name_id'];
         if ($this->good_data['contest_id'] < 0)
         {
-            $query = $this->sql->sql(array("table" => "master_list"))->insert(array('contest_name_id' => $contest_name_id, "contest_date" => date()));
+            $query = $this->sql->sql(array("table" => "master_list"))->insert(array('contest_name_id' => $contest_name_id, "contest_date" => date("Y-m-d")));
             if (!$query)
                 $this->errors[] = 'Cannot instantiate a new contest. Please contact Database Administrator.';
             else
