@@ -95,6 +95,8 @@ class Login
         $res = setcookie("masterList", '', time() - 1);
         unset($_COOKIE["username"]);
         $res = setcookie("username", '', time() - 1);
+        unset($_COOKIE["contestData"]);
+        $res = setcookie("contestData", '', time() - 1);
         // return a little feeedback message
         $this->messages[] = "You have been logged out.";
     }

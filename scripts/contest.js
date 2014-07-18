@@ -102,7 +102,7 @@ $(document).ready( function() {
     }
     updateDisplay();
 
-    $("#recvcall").keypress(checkPotentialDupes());
+    document.getElementById("recvcall").addEventListener("keyup", checkPotentialDupes, false);
     $("#recvcall").focusout(function() { console.log("Focus off triggered."); });
     $("#download").click(function() { console.log("Download triggered."); });
     $("#prefs").click(function() { console.log("Preferences triggered."); });
@@ -171,10 +171,10 @@ function updateContactListDisplay(contacts) {
     option.value = option.text = contact_list_string;
     option.disabled = true;
     document.getElementsByName("contactList")[0].add(option);
-    var dupeList = [];
+    var contactList = [];
     for (var x in contacts)
     {
-        var dupeCheck = { callsign : contacts[x]['recvcall'] };
+        var dupeCheck = { recvcall : contacts[x]['recvcall'] };
         if (contestList['freq_dupe_flag'] == "Y") dupeCheck['frequency'] = contacts[x]['frequency'];
         if (contestList['mode_dupe_flag'] == "Y") dupeCheck['contactmode'] = contacts[x]['contactmode'];
         var contact_string = "";
@@ -207,9 +207,10 @@ function updateContactListDisplay(contacts) {
         var option = document.createElement('option');
         option.text = contact_string;
         document.getElementsByName("contactList")[0].add(option);
-        dupeList.push(dupeCheck);
+        contactList.push(dupeCheck);
     }
-    document.cookie = "dupeList=" + JSON.stringify(dupeList);
+    _.sortBy(contactList, function(d) { return d['recvcall']; });
+    document.cookie = "contactList=" + JSON.stringify(contactList);
 }
 
 function updateScoreDisplay(contacts) {
@@ -363,23 +364,7 @@ var enterNewContact = function(e) {
             return;
         }
     // Add Contact
-    var contactData = {
-        contest_id : masterList["contest_id"],
-        frequency : $("#frequency select").val() || masterList["band_cat"],
-        contactmode : $("#contactmode select").val() || masterList["mode_cat"],
-        sentcall : masterList["callsign"],
-        sentdata1 : $("#sentdata1").val() || masterList["x_data1"],
-        sentdata2 : $("#sentdata2").val() || masterList["x_data2"],
-        sentdata3 : $("#sentdata3").val() || masterList["x_data3"],
-        sentdata4 : $("#sentdata4").val() || masterList["x_data4"],
-        sentdata5 : $("#sentdata5").val() || masterList["x_data5"],
-        recvcall : $("#recvcall").val().toUpperCase() || $("#recvcall").val(),
-        recvdata1 : $("#recvdata1").val(),
-        recvdata2 : $("#recvdata2").val(),
-        recvdata3 : $("#recvdata3").val(),
-        recvdata4 : $("#recvdata4").val(),
-        recvdata5 : $("#recvdata5").val()
-    };
+    generateNewContact();
     $.ajax({
         type: "POST",
         url: "handlers/contact_data.php",
@@ -397,8 +382,60 @@ var enterNewContact = function(e) {
 
 var checkPotentialDupes = function() {
     console.log("Key Press triggered.");
-    var dupeList = $.parseJSON(getCookie('dupeList'));
+    var contactList = $.parseJSON(getCookie('contactList'));
+    $("#dupeArea").html("");
+    console.log($("#recvcall").val());
+    if ($("#recvcall").val() === "") return;
+    for (var x in contactList)
+    {
+        console.log(contactList[x]);
+        if (checkContactForDupe(contactList[x], generateNewContact(), false)) $("#dupeArea").html($("#dupeArea").html() + contactList[x]['recvcall'] + " ");
+    }
+}
+
+var getDupeList = function() {
+    var contestList = $.parseJSON(getCookie('contestList'));
+    var dupeList = ["recvcall"];
+    if (contestList['freq_dupe_flag'] == "Y") dupeList.push("frequency");
+    if (contestList['mode_dupe_flag'] == "Y") dupeList.push("contactmode");
+    for (var x = 1; x <= 5; x++)
+    {
+        if (contestList['data' + x + '_dupe_flag'] == "Y") dupeList.push("recvdata" + x);
+        else if (contestList['data' + x + '_dupe_flag'] == "D") _.extend(dupeList, ["sentdata" + x, "recvdata" + x]);
+    }
+    return dupeList;
+}
+
+var checkContactForDupe = function(contact1, contact2, fullCheck) {
+    var dupeList = getDupeList();
     for (var x in dupeList)
     {
+        if (_.has(contact1, dupeList[x]) && _.has(contact2, dupeList[x]))
+        {
+            if (!fullCheck && !contact1[dupeList[x]].match(contact2[dupeList[x]])) return false;
+            if (fullCheck && contact1[dupeList[x]] !== contact2[dupeList[x]]) return false;
+        }
     }
+    return true;
+}
+
+var generateNewContact = function() {
+    var masterList = $.parseJSON(getCookie('masterList'));
+    return {
+        contest_id : masterList["contest_id"],
+        frequency : $("#frequency select").val() || masterList["band_cat"],
+        contactmode : $("#contactmode select").val() || masterList["mode_cat"],
+        sentcall : masterList["callsign"],
+        sentdata1 : $("#sentdata1").val() || masterList["x_data1"],
+        sentdata2 : $("#sentdata2").val() || masterList["x_data2"],
+        sentdata3 : $("#sentdata3").val() || masterList["x_data3"],
+        sentdata4 : $("#sentdata4").val() || masterList["x_data4"],
+        sentdata5 : $("#sentdata5").val() || masterList["x_data5"],
+        recvcall : $("#recvcall").val().toUpperCase() || $("#recvcall").val(),
+        recvdata1 : $("#recvdata1").val(),
+        recvdata2 : $("#recvdata2").val(),
+        recvdata3 : $("#recvdata3").val(),
+        recvdata4 : $("#recvdata4").val(),
+        recvdata5 : $("#recvdata5").val()
+    };
 }
