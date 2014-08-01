@@ -103,7 +103,7 @@ $(document).ready( function() {
     updateDisplay();
 
     document.getElementById("recvcall").addEventListener("keyup", checkPotentialDupes, false);
-    $("#recvcall").focusout(function() { console.log("Focus off triggered."); });
+    document.getElementById("recvcall").addEventListener("focusout", checkForDupe, false);
     $("#download").click(function() { console.log("Download triggered."); });
     $("#prefs").click(function() { console.log("Preferences triggered."); });
     $('body').on('dblclick', '#contactList select', function() { console.log("Contact List Select triggered."); });
@@ -370,25 +370,30 @@ var enterNewContact = function(e) {
         url: "handlers/contact_data.php",
         data: { "contactData" : JSON.stringify(contactData) }
     });
-    // Reset Contact Display
-    $("#recvcall").val("");
-    for (var x = 1; x <= 5; x++)
-    {
-        $("#sentdata" + x).val("");
-        $("#recvdata" + x).val("");
-    }
-    updateDisplay();
+    resetContactDisplay();
 }
 
-var checkPotentialDupes = function() {
-    console.log("Key Press triggered.");
+var checkForDupe = function() {
     var contactList = $.parseJSON(getCookie('contactList'));
     $("#dupeArea").html("");
-    console.log($("#recvcall").val());
     if ($("#recvcall").val() === "") return;
     for (var x in contactList)
     {
-        console.log(contactList[x]);
+        if (checkContactForDupe(contactList[x], generateNewContact(), true))
+        {
+            $("#dupeArea").html(contactList[x]['recvcall'] + "IS A DUPLICATE!");
+            resetContactDisplay();
+            return;
+        }
+    }
+}
+
+var checkPotentialDupes = function() {
+    var contactList = $.parseJSON(getCookie('contactList'));
+    $("#dupeArea").html("");
+    if ($("#recvcall").val() === "") return;
+    for (var x in contactList)
+    {
         if (checkContactForDupe(contactList[x], generateNewContact(), false)) $("#dupeArea").html($("#dupeArea").html() + contactList[x]['recvcall'] + " ");
     }
 }
@@ -419,6 +424,16 @@ var checkContactForDupe = function(contact1, contact2, fullCheck) {
     return true;
 }
 
+var repeatCallSign = function(contact1) {
+    var contactList = $.parseJSON(getCookie('contactList'));
+    if ($("#recvcall").val() === "") return false;
+    for (var x in contactList)
+    {
+        if (contact1["recvcall"] === contactList[x]["recvcall"]) return contactList[x];
+    }
+    return false;
+}
+
 var generateNewContact = function() {
     var masterList = $.parseJSON(getCookie('masterList'));
     return {
@@ -438,4 +453,15 @@ var generateNewContact = function() {
         recvdata4 : $("#recvdata4").val(),
         recvdata5 : $("#recvdata5").val()
     };
+}
+
+var resetContactDisplay = function() {
+    // Reset Contact Display
+    $("#recvcall").val("");
+    for (var x = 1; x <= 5; x++)
+    {
+        $("#sentdata" + x).val("");
+        $("#recvdata" + x).val("");
+    }
+    updateDisplay();
 }
