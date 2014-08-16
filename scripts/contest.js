@@ -381,7 +381,7 @@ var checkForDupe = function() {
     {
         if (checkContactForDupe(contactList[x], generateNewContact(), true))
         {
-            $("#dupeArea").html(contactList[x]['recvcall'] + "IS A DUPLICATE!");
+            $("#dupeArea").html(contactList[x]['recvcall'] + "IS A DUPLICATE! CONTACTED AT " + contactList[x]['datetime']);
             resetContactDisplay();
             return;
         }
