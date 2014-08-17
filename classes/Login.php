@@ -87,16 +87,11 @@ class Login
         $_SESSION = array();
         session_destroy();
         // delete the cookies the user created
-        unset($_COOKIE["contestList"]);
-        $res = setcookie("contestList", '', time() - 1);
-        unset($_COOKIE["dataType"]);
-        $res = setcookie("dataType", '', time() - 1);
-        unset($_COOKIE["masterList"]);
-        $res = setcookie("masterList", '', time() - 1);
-        unset($_COOKIE["username"]);
-        $res = setcookie("username", '', time() - 1);
-        unset($_COOKIE["contestData"]);
-        $res = setcookie("contestData", '', time() - 1);
+        foreach ($_COOKIE as $k => $v)
+        {
+            unset($_COOKIE[$k]);
+            $res = setcookie($k, '', time() - 1);
+        }
         // return a little feeedback message
         $this->messages[] = "You have been logged out.";
     }

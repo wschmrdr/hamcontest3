@@ -9,7 +9,7 @@ class Validation
     public function __construct($caller, $data, $validators)
     {
         $this->log = new Logging();
-        $this->log->lfile($_SERVER['DOCUMENT_ROOT'] . '/log/hamcontest3.txt');
+        $this->log->lfile('/tmp/hamcontest3.txt');
 
         $this->caller_function = $caller;
         foreach ($validators as $val_k => $val_v)

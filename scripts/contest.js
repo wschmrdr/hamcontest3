@@ -1,12 +1,35 @@
 $(document).ready( function() {
+    setTimeout("", 1);
     var contestList = $.parseJSON(getCookie('contestList'));
     var masterList = $.parseJSON(getCookie('masterList'));
     if (!$("#title").html())
         $("#title").html(contestList['contest_name']);
-    if (!$("#dataEntry").html())
+    initDataEntryDisplay(false);
+    initFrequencyDisplay(false);
+    initContactModeDisplay(false);
+    initSelectSectionDisplay(false);
+    updateDisplay();
+
+    document.getElementById("recvcall").addEventListener("keyup", checkPotentialDupes, false);
+    document.getElementById("recvcall").addEventListener("focusout", checkForDupe, false);
+    $("#download").click(function() { console.log("Download triggered."); });
+    $("#prefs").click(function() { console.log("Preferences triggered."); });
+    $('body').on('dblclick', '#contactList', function() { selectContactEdit(); });
+    $('body').on('change', '#frequency select', function() { console.log("Frequency Select triggered."); });
+    $(".edit-save").click(function() {});
+    $(".edit-delete").click(function() { deleteContact(); });
+});
+
+var initDataEntryDisplay = function(edit) {
+    var contestList = $.parseJSON(getCookie('contestList'));
+    var data_container, pre_id;
+    edit ? data_container = "editDataEntry" : data_container = "dataEntry";
+    edit ? pre_id = "edit_" : pre_id = "";
+    if (!$("#" + data_container).html())
     {
         var callAdded = false;
-        var s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(event); return false;'>";
+        var s = "";
+        edit ? null : s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(event); return false;'>";
         var double_index = 0;
         for (var x = 1; x < 6; x++)
         {
@@ -14,8 +37,8 @@ $(document).ready( function() {
                 continue;
             if (!callAdded && x > contestList['call_loc'])
             {
-                s += htmlLongUpper('recvcall', 'Call', "", true);
-                $("#recvcall input").attr("tabindex", "1");
+                s += htmlLongUpper(pre_id + 'recvcall', 'Call', "", true);
+                $("#" + pre_id + "recvcall input").attr("tabindex", "1");
                 callAdded = true;
             }
             var dataType = getObject("dataType", contestList['type_data' + x]);
@@ -27,32 +50,32 @@ $(document).ready( function() {
                     if (dataType['double_entry'] > 0)
                     {
                         s += "<label>" + dataType['short_name'] + "</label>";
-                        s += htmlLongUpper('sentdata' + x, 'SENT', "", true);
-                        s += htmlLongUpper('recvdata' + x, 'RECV', "", true);
-                        $("#sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
-                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
+                        s += htmlLongUpper(pre_id + 'sentdata' + x, 'SENT', "", true);
+                        s += htmlLongUpper(pre_id + 'recvdata' + x, 'RECV', "", true);
+                        $("#" + pre_id + "sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                        $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
                         double_index++;
                     }
                     else
                     {
-                        s += htmlLongUpper('recvdata' + x, dataType['short_name'], "", true);
-                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                        s += htmlLongUpper(pre_id + 'recvdata' + x, dataType['short_name'], "", true);
+                        $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                     }
                     break;
                 case "number":
                     if (dataType['double_entry'] > 0)
                     {
                         s += "<label>" + dataType['short_name'] + "</label>";
-                        s += htmlLongText('sentdata' + x, 'SENT', "", true, "number");
-                        s += htmlLongText('recvdata' + x, 'RECV', "", true, "number");
-                        $("#sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
-                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
+                        s += htmlLongText(pre_id + 'sentdata' + x, 'SENT', "", true, "number");
+                        s += htmlLongText(pre_id + 'recvdata' + x, 'RECV', "", true, "number");
+                        $("#" + pre_id + "sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                        $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
                         double_index++;
                     }
                     else
                     {
-                        s += htmlLongText('recvdata' + x, dataType['short_name'], "", true, "number");
-                        $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                        s += htmlLongText(pre_id + 'recvdata' + x, dataType['short_name'], "", true, "number");
+                        $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                     }
                     break;
                 case "special":
@@ -61,54 +84,60 @@ $(document).ready( function() {
                         if (dataType['double_entry'] > 0)
                         {
                             s += "<label>" + dataType['short_name'] + "</label>";
-                            s += htmlLongUpper('sentdata' + x, 'SENT', "", true);
-                            s += htmlLongUpper('recvdata' + x, 'RECV', "", true);
-                            $("#sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
-                            $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
+                            s += htmlLongUpper(pre_id + 'sentdata' + x, 'SENT', "", true);
+                            s += htmlLongUpper(pre_id + 'recvdata' + x, 'RECV', "", true);
+                            $("#" + pre_id + "sentdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                            $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 2) + '"');
                             double_index++;
                         }
                         else
                         {
-                            s += htmlLongUpper('recvdata' + x, dataType['short_name'], "", true);
-                            $("#recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
+                            s += htmlLongUpper(pre_id + 'recvdata' + x, dataType['short_name'], "", true);
+                            $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                         }
                     }
                     break;
             }
         }
-        s += "<input type='submit' name='contactdata' value='OK' /></form>";
-        $("#dataEntry").html(s);
+        edit ? null : s += "<input type='submit' name='contactdata' value='OK' /></form>";
+        $("#" + data_container).html(s);
     }
-    if (!$("#frequency").html())
+}
+
+var initFrequencyDisplay = function(edit) {
+    var contestList = $.parseJSON(getCookie('contestList'));
+    var data_container;
+    edit ? data_container = "editFrequency" : data_container = "frequency";
+    if (!$("#" + data_container).html())
     {
         if (contestList['band_flag'] != "Y")
         {
-            $("#frequency").html(htmlLongEnum({htmlField: 'frequency', label: 'Band', enumlist: ["band_cat"], value: "", omit: ['ALL'] }));
+            $("#" + data_container).html(htmlLongEnum({htmlField: data_container, label: 'Band', enumlist: ["band_cat"], value: "", omit: ['ALL'] }));
         }
     }
-    if (!$("#contactmode").html())
+}
+
+var initContactModeDisplay = function(edit) {
+    var contestList = $.parseJSON(getCookie('contestList'));
+    var data_container;
+    edit ? data_container = "editContactmode" : data_container = "contactmode";
+    if (!$("#" + data_container).html())
     {
         if (contestList['mode_flag'] != "Y")
         {
-            $("#contactmode").html(htmlLongEnum({htmlfield: 'contactmode', label: 'Mode', enumlist: ["mode_cat"], value: "", omit: ['MIXED']}));
+            $("#" + data_container).html(htmlLongEnum({htmlfield: data_container, label: 'Mode', enumlist: ["mode_cat"], value: "", omit: ['MIXED']}));
         }
     }
-    if (!$("#sectSelect").html())
-    {
-    }
-    if (!$("#contactList").html())
-    {
-        $("#contactList").html("<select multiple id='contactList' name='contactList'></select>");
-    }
-    updateDisplay();
+}
 
-    document.getElementById("recvcall").addEventListener("keyup", checkPotentialDupes, false);
-    document.getElementById("recvcall").addEventListener("focusout", checkForDupe, false);
-    $("#download").click(function() { console.log("Download triggered."); });
-    $("#prefs").click(function() { console.log("Preferences triggered."); });
-    $('body').on('dblclick', '#contactList select', function() { console.log("Contact List Select triggered."); });
-    $('body').on('change', '#frequency select', function() { console.log("Frequency Select triggered."); });
-});
+var initSelectSectionDisplay = function(edit) {
+    var contestList = $.parseJSON(getCookie('contestList'));
+    var data_container;
+    edit ? data_container = "editSectSelect" : data_container = "sectSelect";
+    if (!$("#" + data_container).html())
+    {
+    }
+}
 
 var updateDisplay = function() {
     var masterList = $.parseJSON(getCookie('masterList'));
@@ -118,6 +147,7 @@ var updateDisplay = function() {
         data: { "contest_id" : masterList['contest_id'] },
         success: function(output) {
             var contacts = $.parseJSON(output);
+            document.cookie = "fullContactList=" + JSON.stringify(contacts);
             updateUserCheckLine();
             updateContactListDisplay(contacts);
             updateScoreDisplay(contacts);
@@ -153,7 +183,7 @@ var updateUserCheckLine = function() {
 }
 
 function updateContactListDisplay(contacts) {
-    $("#contactList").html("<select multiple id='contactList' name='contactList'></select>");
+    $("#contactArea").html("<select multiple id='contactList' name='contactList'></select>");
     var contact_list_string = "FREQ- MO TIME CALLSIGN--";
     var contestList = $.parseJSON(getCookie('contestList'));
     for (var x = 1; x <= 5; x++)
@@ -181,7 +211,7 @@ function updateContactListDisplay(contacts) {
         contact_string += contacts[x]['frequency'].pad(5, " ", 0) + " "
                         + contacts[x]['contactmode'].pad(2, " ", 0) + " "
                         + moment(contacts[x]['contactdate']).utc().format("HHmm") + " "
-                        + contacts[x]['recvcall'].pad(10, " ", 1);
+                        + contacts[x]['recvcall'].pad(10, " ", 0);
         for (var y = 1; y <= 5; y++)
         {
             var dataType = getObject("dataType", contestList['type_data' + y]);
@@ -205,6 +235,7 @@ function updateContactListDisplay(contacts) {
             }
         }
         var option = document.createElement('option');
+        option.value = contacts[x]["entry"];
         option.text = contact_string;
         document.getElementsByName("contactList")[0].add(option);
         contactList.push(dupeCheck);
@@ -464,4 +495,39 @@ var resetContactDisplay = function() {
         $("#recvdata" + x).val("");
     }
     updateDisplay();
+}
+
+var selectContactEdit = function(e) {
+    $(".modal-title").html("EDIT CONTACT");
+    $(".modal-body").load("views/edit_contact.php", function() {
+        setTimeout(initEditContact($("#contactList option:selected").val()), 1);
+    });
+    $(".modal").modal();
+}
+
+var initEditContact = function(entry) {
+    initDataEntryDisplay(true);
+    initFrequencyDisplay(true);
+    initContactModeDisplay(true);
+    initSelectSectionDisplay(true);
+    var contactList = $.parseJSON(getCookie('fullContactList'));
+    contactToEdit = _.findWhere(contactList, {entry: entry});
+    $("#editFrequency select").val(contactToEdit["frequency"]);
+    $("#editContactmode select").val(contactToEdit["contactmode"]);
+    $("#edit_sentcall").val(contactToEdit["sentcall"]);
+    $("#edit_sentdata1").val(contactToEdit["sentdata1"]);
+    $("#edit_sentdata2").val(contactToEdit["sentdata2"]);
+    $("#edit_sentdata3").val(contactToEdit["sentdata3"]);
+    $("#edit_sentdata4").val(contactToEdit["sentdata4"]);
+    $("#edit_sentdata5").val(contactToEdit["sentdata5"]);
+    $("#edit_recvcall").val(contactToEdit["recvcall"]);
+    $("#edit_recvdata1").val(contactToEdit["recvdata1"]);
+    $("#edit_recvdata2").val(contactToEdit["recvdata2"]);
+    $("#edit_recvdata3").val(contactToEdit["recvdata3"]);
+    $("#edit_recvdata4").val(contactToEdit["recvdata4"]);
+    $("#edit_recvdata5").val(contactToEdit["recvdata5"]);
+}
+
+var deleteContact = function() {
+    console.log("Delete Contact Selected.");
 }

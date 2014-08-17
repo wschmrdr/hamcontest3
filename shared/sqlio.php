@@ -140,7 +140,7 @@ class SQLfunction
     private function log_data($log_value)
     {
         $log = new Logging();
-        $log->lfile($_SERVER['DOCUMENT_ROOT'] . '/log/hamcontest3.txt');
+        $log->lfile('/tmp/hamcontest3.txt');
         $log->lwrite($log_value);
         $log->lclose();
     }

@@ -76,22 +76,25 @@ if ($login->isUserLoggedIn() == true) {
     }
     else if ($_SESSION['status'] == "sentData")
     {
-        require_once("classes/SentData.php");
-        $sentData = new SentData();
-        if ($sentData->errors) {
-            foreach ($sentData->errors as $error) {
-                $messageHandler->errors[] = $error;
-            }   
-        }   
-        if ($sentData->messages) {
-            foreach ($sentData->messages as $message) {
-                $messageHandler->messages[] = $message;
-            }   
-        }
-        if (!empty($messageHandler->errors))
+        if (!isset($_COOKIE["contestData"]))
         {
-            include("views/error.php");
-            return;
+            require_once("classes/SentData.php");
+            $sentData = new SentData();
+            if ($sentData->errors) {
+                foreach ($sentData->errors as $error) {
+                    $messageHandler->errors[] = $error;
+                }   
+            }   
+            if ($sentData->messages) {
+                foreach ($sentData->messages as $message) {
+                    $messageHandler->messages[] = $message;
+                }   
+            }
+            if (!empty($messageHandler->errors))
+            {
+                include("views/error.php");
+                return;
+            }
         }
         include("views/contest.php");
     }
