@@ -14,10 +14,10 @@ $(document).ready( function() {
     document.getElementById("recvcall").addEventListener("focusout", checkForDupe, false);
     $("#download").click(function() { console.log("Download triggered."); });
     $("#prefs").click(function() { console.log("Preferences triggered."); });
+    $(".modal").on('click', ".edit-save", function() { editContact(); });
+    $(".modal").on('click', ".edit-delete", function() { deleteContact(); });
     $('body').on('dblclick', '#contactList', function() { selectContactEdit(); });
     $('body').on('change', '#frequency select', function() { console.log("Frequency Select triggered."); });
-    $(".edit-save").click(function() {});
-    $(".edit-delete").click(function() { deleteContact(); });
 });
 
 var initDataEntryDisplay = function(edit) {
@@ -204,7 +204,7 @@ function updateContactListDisplay(contacts) {
     var contactList = [];
     for (var x in contacts)
     {
-        var dupeCheck = { recvcall : contacts[x]['recvcall'] };
+        var dupeCheck = { entry : contacts[x]['entry'], recvcall : contacts[x]['recvcall'] };
         if (contestList['freq_dupe_flag'] == "Y") dupeCheck['frequency'] = contacts[x]['frequency'];
         if (contestList['mode_dupe_flag'] == "Y") dupeCheck['contactmode'] = contacts[x]['contactmode'];
         var contact_string = "";
@@ -530,4 +530,8 @@ var initEditContact = function(entry) {
 
 var deleteContact = function() {
     console.log("Delete Contact Selected.");
+}
+
+var editContact = function() {
+    console.log("Edit Contact Selected.");
 }

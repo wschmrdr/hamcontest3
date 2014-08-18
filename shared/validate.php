@@ -9,6 +9,7 @@ class Validation
     public function __construct($caller, $data, $validators)
     {
         $this->log = new Logging();
+        touch('/tmp/hamcontest3.txt');
         $this->log->lfile('/tmp/hamcontest3.txt');
 
         $this->caller_function = $caller;
