@@ -1,3 +1,4 @@
+var contactToEdit;
 $(document).ready( function() {
     setTimeout("", 1);
     var contestList = $.parseJSON(getCookie('contestList'));
@@ -11,13 +12,15 @@ $(document).ready( function() {
     updateDisplay();
 
     document.getElementById("recvcall").addEventListener("keyup", checkPotentialDupes, false);
-    document.getElementById("recvcall").addEventListener("focusout", checkForDupe, false);
+    // document.getElementById("recvcall").addEventListener("focusout", checkForDupe, false);
     $("#download").click(function() { console.log("Download triggered."); });
     $("#prefs").click(function() { console.log("Preferences triggered."); });
-    $(".modal").on('click', ".edit-save", function() { editContact(); });
-    $(".modal").on('click', ".edit-delete", function() { deleteContact(); });
-    $('body').on('dblclick', '#contactList', function() { selectContactEdit(); });
+    $(".modal").on('click', ".edit-save", editContact);
+    $(".modal").on('click', ".edit-dont-save", function() { contactToEdit = null; });
+    $(".modal").on('click', ".edit-delete", deleteContact);
+    $('body').on('dblclick', '#contactList', selectContactEdit);
     $('body').on('change', '#frequency select', function() { console.log("Frequency Select triggered."); });
+    $('body').on('focusout', '#recvcall', checkForDupe);
 });
 
 var initDataEntryDisplay = function(edit) {
@@ -406,13 +409,15 @@ var enterNewContact = function(e) {
 
 var checkForDupe = function() {
     var contactList = $.parseJSON(getCookie('contactList'));
+    var fullContactList = $.parseJSON(getCookie('fullContactList'));
     $("#dupeArea").html("");
     if ($("#recvcall").val() === "") return;
     for (var x in contactList)
     {
         if (checkContactForDupe(contactList[x], generateNewContact(), true))
         {
-            $("#dupeArea").html(contactList[x]['recvcall'] + "IS A DUPLICATE! CONTACTED AT " + contactList[x]['datetime']);
+            var fullContact = _.findWhere(fullContactList, function(ct) { return ct['entry'] == contactList[x]['entry']; });
+            $("#dupeArea").html(contactList[x]['recvcall'] + " IS A DUPLICATE! CONTACTED AT " + fullContact['contactdate']);
             resetContactDisplay();
             return;
         }
@@ -512,8 +517,12 @@ var initEditContact = function(entry) {
     initSelectSectionDisplay(true);
     var contactList = $.parseJSON(getCookie('fullContactList'));
     contactToEdit = _.findWhere(contactList, {entry: entry});
-    $("#editFrequency select").val(contactToEdit["frequency"]);
-    $("#editContactmode select").val(contactToEdit["contactmode"]);
+    $("#editFrequency").on("done", function(event) {
+        setSelectValue("editFrequency", contactToEdit["frequency"]);
+    });
+    $("#editContactmode").on("done", function(event) {
+        setSelectValue("editContactmode", contactToEdit["contactmode"]);
+    });
     $("#edit_sentcall").val(contactToEdit["sentcall"]);
     $("#edit_sentdata1").val(contactToEdit["sentdata1"]);
     $("#edit_sentdata2").val(contactToEdit["sentdata2"]);
@@ -528,10 +537,30 @@ var initEditContact = function(entry) {
     $("#edit_recvdata5").val(contactToEdit["recvdata5"]);
 }
 
+var triggerDone = function(selectID) {
+    if (selectID == "editFrequency") setSelectValue("editFrequency", contactToEdit["frequency"]);
+}
+
+var setSelectValue = function(selectID, value) {
+    var sel = document.getElementById(selectID);
+    if (!sel) return false;
+    for (var i = 0; i < sel.options.length; i++)
+    {
+        if (sel.options[i].value == value)
+        {
+            sel.selectedIndex = i;
+            return true;
+        }
+    }
+    return false;
+}
+
 var deleteContact = function() {
     console.log("Delete Contact Selected.");
+    console.log(contactToEdit);
 }
 
 var editContact = function() {
     console.log("Edit Contact Selected.");
+    console.log(contactToEdit);
 }

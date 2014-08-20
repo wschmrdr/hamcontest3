@@ -168,7 +168,7 @@ var instanceSelected = function(contestInstanceId) {
                     $("#otherdata").html($("#otherdata").html() + "<br/>");
                     break;
                 case "enum":
-                    $("#otherdata").html($("#otherdata").html() + "<div id='x_data" + x + "'></div>");
+                    $("#otherdata").html($("#otherdata").html() + "<div id='x_data" + x + "_container'></div>");
                     htmlLongEnum({htmlField: 'x_data' + x, label: dataType['long_name'], enumlist: [dataType['enum1'], dataType['enum2'], dataType['enum3']], value: value, omit: []});
                     $("#x_data" + x + "_required").html("");
                     break;

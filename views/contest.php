@@ -15,6 +15,7 @@ if (isset($messageHandler)) {
 ?>
 <html>
     <head>
+        <link rel="stylesheet" href="assets/overrides.css"></link>
         <link rel="stylesheet" href="bootstrap-3.2.0-dist/css/bootstrap.css"></link>
         <script src="jquery-1.10.1.js"></script>
         <script src="underscore-min.js"></script>
@@ -30,16 +31,15 @@ if (isset($messageHandler)) {
         <div id="title"></div>
         <div id="score"></div>
         <div id="dataEntry"></div>
-        <div id="frequency"></div>
-        <div id="contactmode"></div>
-        <div id="sectSelect"></div>
+        <div id="frequency_container"></div>
+        <div id="contactmode_container"></div>
+        <div id="sectSelect_container"></div>
         <div id="checkLine"></div>
         <div id="contactArea"></div>
         <div id="dupeArea"></div>
         <a href="#" id="download">Download</a><br/>
         <a href="#" id="prefs">Preferences</a><br/>
         <a href="index.php?logout">Logout</a><br/>
-<!-- Modal -->
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
