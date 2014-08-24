@@ -9,6 +9,14 @@ function getCookie(cookie_name)
     }
     return "";
 }
+
+function setCookie(cookie_name,cookie_value) {
+    var d = new Date();
+    d.setTime(d.getTime()+(30*24*60*60*1000));
+    var expires = "expires="+d.toGMTString();
+    document.cookie = cookie_name+"="+cookie_value+"; "+expires;
+}
+
 var getObject = function(cookie_name, id) {
     var list = getCookie(cookie_name);
     if (!list) return null;

@@ -28,7 +28,7 @@ if (isset($messageHandler)) {
         <script src="bootstrap-3.2.0-dist/js/bootstrap.js"></script>
     </head>
     <body>
-        <div id="title"></div>
+        <div id="contestTitle"></div>
         <div id="score"></div>
         <div id="dataEntry"></div>
         <div id="frequency_container"></div>

@@ -1,11 +1,7 @@
 <?php
-    if (isset($_POST['contest']) && !empty($_POST['contest']))
+    if (isset($_POST['contest_name']) && !empty($_POST['contest_name']))
     {
         session_start();
-        $contest = $_POST['contest'];
-        $_SESSION['contest_name'] = $_POST['contest'];
-        require_once('../classes/ContactData.php');
-        $cd = new ContactData();
-        # $cd->getSentContestData();
-        echo json_encode($cd);
+        require_once('../classes/SentData.php');
+        new SentData();
     }

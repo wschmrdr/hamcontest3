@@ -29,7 +29,8 @@ function htmlLongUpper(dataNum, label, value, required) {
 function enumCheckWrite(htmlField, enumlist, listindex, s) {
     if (enumlist.length == listindex + 1) {
         $("#" + htmlField + "_container").html(s + "</select><span id='" + htmlField + "_required'></span>");
-        $("#" + htmlField).trigger("done");
+        $("#" + htmlField + "_required").html("");
+        $("body").trigger(htmlField + "done");
         return true;
     }
     return false;

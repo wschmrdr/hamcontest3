@@ -52,29 +52,27 @@ if ($login->isUserLoggedIn() == true) {
     if ($_SESSION['user_name'] == false) {
         header("location:index.php?logout");
     }
-    if (empty($_SESSION['status'])) {
-        // With an empty status, we go to either SentData or EnterContacts.
-        // This depends upon the results of StartApp, all in its constructor.
-        require_once("classes/StartApp.php");
-        $startApp = new StartApp();
-        if ($startApp->errors) {
-            foreach ($startApp->errors as $error) {
-                $messageHandler->errors[] = $error;
-            }   
+    // With an empty status, we go to either SentData or EnterContacts.
+    // This depends upon the results of StartApp, all in its constructor.
+    require_once("classes/StartApp.php");
+    $startApp = new StartApp();
+    if ($startApp->errors) {
+        foreach ($startApp->errors as $error) {
+            $messageHandler->errors[] = $error;
         }   
-        if ($startApp->messages) {
-            foreach ($startApp->messages as $message) {
-                $messageHandler->messages[] = $message;
-            }   
-        }
-        if (empty($_SESSION['status']))
-        {
-            include("views/error.php");
-            return;
-        }
-        include("views/sent_data.php");
+    }   
+    if ($startApp->messages) {
+        foreach ($startApp->messages as $message) {
+            $messageHandler->messages[] = $message;
+        }   
     }
-    else if ($_SESSION['status'] == "sentData")
+    if (empty($_SESSION['status']))
+    {
+        include("views/error.php");
+        return;
+    }
+    include("views/contest.php");
+    if (false)
     {
         if (!isset($_COOKIE["contestData"]))
         {
@@ -96,12 +94,6 @@ if ($login->isUserLoggedIn() == true) {
                 return;
             }
         }
-        include("views/contest.php");
-    }
-    else
-    {
-        echo $_SESSION['status'];
-        include("views/logged_in.php");
     }
 } else {
     // the user is not logged in. you can do whatever you want here.

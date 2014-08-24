@@ -14,11 +14,6 @@ class SentData
     public function __construct()
     {
         include_once($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
-        if (!isset($_POST['contest_name']))
-        {
-            $this->errors[] = "Did not make Sent Data.";
-            return;
-        }
         $this->sql = new SQLfunction();
         $this->validateData();
         if (!empty($this->errors))
@@ -130,40 +125,7 @@ class SentData
         if (!$query)
             $this->errors[] = 'Cannot populate the contest. Please contact Database Administrator.';
 
-        $this->good_data['contest_id'] = $contest_id;
-        $masterList = json_decode($_COOKIE['masterList'], TRUE);
-        foreach ($masterList as $key => $value)
-        {
-            if ($value['contest_id'] == $this->good_data['contest_id'])
-            {
-                setcookie('masterList', json_encode($value), time() + (86400 * 30), '/');
-                break;
-            }
-        }
-
-        $this->good_data['contest_name_id'] = $contest_name_id;
-        $contestList = json_decode($_COOKIE['contestList'], TRUE);
-        foreach ($contestList as $key => $value)
-        {
-            if ($value['contest_name_id'] == $this->good_data['contest_name_id'])
-            {
-                $params = array();
-                $params['band_cat'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => "band_cat"));
-                $params['mode_cat'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => "mode_cat"));
-                for ($x = 1; $x <= 5; $x++)
-                {
-                    $dt = $value['type_data' . $x];
-                    if ($dt <= 0) continue;
-                    $query = $this->sql->sql(array("table" => "data_type", "fetchall" => false))->select(array("data_type_id" => $dt));
-                    if ($query['data_type'] != "enum") continue;
-                    if (array_key_exists("enum1", $query)) $params['enum1'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => $query['enum1']));
-                    if (array_key_exists("enum2", $query)) $params['enum2'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => $query['enum2']));
-                    if (array_key_exists("enum3", $query)) $params['enum3'] = $this->sql->sql(array("table" => "enum_values"))->select(array("enum_type" => $query['enum3']));
-                }
-                setcookie('enumValues', json_encode($params), time() + (86400 * 30), '/');
-                setcookie('contestList', json_encode($value), time() + (86400 * 30), '/');
-                break;
-            }
-        }
+        setcookie('contest_id', $contest_id, time() + (86400 * 30), '/');
+        setcookie('contest_name_id', $contest_name_id, time() + (86400 * 30), '/');
     }
 }

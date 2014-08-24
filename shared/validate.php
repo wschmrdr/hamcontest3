@@ -4,13 +4,9 @@ class Validation
     public $errors = array();
     public $good_data = array();
     private $caller_function = "";
-    private $log = "";
 
     public function __construct($caller, $data, $validators)
     {
-        $this->log = new Logging();
-        touch('/tmp/hamcontest3.txt');
-        $this->log->lfile('/tmp/hamcontest3.txt');
 
         $this->caller_function = $caller;
         foreach ($validators as $val_k => $val_v)
@@ -44,6 +40,10 @@ class Validation
             if (array_key_exists($val_k, $this->errors)) continue;
             $this->val_asciiString($data, $val_k);
             if (!array_key_exists($val_k, $this->errors) and array_key_exists($val_k, $data)) $this->good_data[$val_k] = $data[$val_k];
+        }
+        foreach ($this->errors as $error)
+        {
+            $this->log_data($error);
         }
     }
 
@@ -119,5 +119,14 @@ class Validation
         $this->good_data['operator_cat'] = in_array($data[$key], array('M', 'W')) ? "MULTI-OP" : "SINGLE-OP";
         if ($data[$key] == 'Q') $this->good_data['power'] = "QRP";
         else $this->good_data['power'] = in_array($data[$key], array('A', 'L', 'W')) ? "LOW" : "HIGH";
+    }
+
+    private function log_data($log_value)
+    {
+        $log = new Logging();
+        touch('/tmp/hamcontest3.txt');
+        $log->lfile('/tmp/hamcontest3.txt');
+        $log->lwrite($log_value);
+        $log->lclose();
     }
 }
