@@ -175,9 +175,9 @@ mode_cat,,MIX ED
 operator_cat,,SINGLE-OP
 operator_cat,,MULTI-OP
 operator_cat,,CHECKLOG
-power,,HIGH
-power,,LOW
-power,,QRP
+power_cat,,HIGH
+power_cat,,LOW
+power_cat,,QRP
 station_cat,,FIXED
 station_cat,,MOBILE
 station_cat,,PORTABLE

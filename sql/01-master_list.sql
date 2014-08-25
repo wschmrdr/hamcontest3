@@ -12,7 +12,7 @@ CREATE TABLE master_list (
     band_cat        varchar(10),
     mode_cat        varchar(10),
     operator_cat    varchar(15),
-    power           varchar(10),
+    power_cat       varchar(10),
     station_cat     varchar(15),
     time_cat        varchar(15),
     transmitter_cat varchar(10),

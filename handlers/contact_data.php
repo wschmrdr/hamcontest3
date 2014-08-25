@@ -73,6 +73,7 @@
         $data = json_decode($_POST['contactData'], true);
         $good_data = validateData($data, false);
 
+        $sql = new SQLfunction();
         $good_data['contactdate'] = $sql->sysdate();
         $query = $sql->sql(array("table" => "contact_data"))->insert($good_data);
         if (!$query) throw new Exception("Cannot add contact to the database.");

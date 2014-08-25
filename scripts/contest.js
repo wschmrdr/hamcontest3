@@ -1,13 +1,18 @@
-var contactToEdit, fullContactList, masterList, contestList, dataTypeList, dupeList, enumValues = {};
+var contactToEdit, fullContactList, masterList, contestList, dataTypeList, dupeList, enumValues = {}, displayRefresh;
 
 $(document).ready( function() {
     setTimeout("", 1);
-    initSentData();
+    initSentData(false);
     getDataType();
     getContestList();
 
     $(document).on("clLoadDone", "body", loadContestName);
 
+    $("a#sentdata").click(function() {
+        if (displayRefresh) clearInterval(displayRefresh);
+        initSentData(true);
+        loadContestName();
+    });
     $("#download").click(function() { console.log("Download triggered."); });
     $("#prefs").click(function() { console.log("Preferences triggered."); });
     $(".modal").on('click', ".edit-save", editContact);
@@ -306,14 +311,39 @@ function calculateScore(formula, endchars) {
                 case '3':
                 case '4':
                 case '5':
+                    var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
                     var instance = _.findWhere(masterList, {contest_id : getCookie('contest_id')});
+                    var dataType = _.findWhere(dataTypeList, { data_type_id: contest['type_data' + formula[iter]] });
+                    var enum1, enum2, enum3, check;
                     var unique = {};
                     var distinct = [];
+
+                    if (dataType['data_type'] == 'enum')
+                    {
+                        enum1 = enumValues[dataType['enum1']];
+                        dataType['enum2'] ? enum2 = enumValues[dataType['enum2']] : enum2 = [];
+                        dataType['enum3'] ? enum3 = enumValues[dataType['enum3']] : enum3 = [];
+                        if (_.findWhere(enum1, { shortname : instance['x_data' + formula[iter]] })) check = 1;
+                        else if (_.findWhere(enum2, { shortname : instance['x_data' + formula[iter]] })) check = 2;
+                        else check = 3;
+                    }
+
                     for ( var i in fullContactList )
                     {
-                        if ( typeof(unique[fullContactList[i]['recvdata' + formula[iter]]]) == "undefined")
+                        if (dataType['data_type'] != 'enum')
                         {
-                            distinct.push(fullContactList[i]['recvdata' + formula[iter]]);
+                            if ( typeof(unique[fullContactList[i]['recvdata' + formula[iter]]]) == "undefined")
+                                distinct.push(fullContactList[i]['recvdata' + formula[iter]]);
+                        }
+                        else if (_.findWhere(enum1, { shortname : fullContactList[i]['recvdata' + formula[iter]] }))
+                        {
+                            if ( typeof(unique[fullContactList[i]['recvdata' + formula[iter]]]) == "undefined")
+                                distinct.push(fullContactList[i]['recvdata' + formula[iter]]);
+                        }
+                        else if (check == 1 && _.findWhere(enum2, { shortname : fullContactList[i]['recvdata' + formula[iter]] }))
+                        {
+                            if ( typeof(unique[fullContactList[i]['recvdata' + formula[iter]]]) == "undefined")
+                                distinct.push(fullContactList[i]['recvdata' + formula[iter]]);
                         }
                         unique[fullContactList[i]['recvdata' + formula[iter]]] = 0;
                     }
@@ -383,10 +413,10 @@ function calculateScore(formula, endchars) {
     return {'iter' : iter, 'constant' : constant};
 }
 
-var enterNewContact = function(e) {
-    e.preventDefault();
+var enterNewContact = function(event) {
+    event.preventDefault();
     // Check for Valid Contact
-    if (checkValidContact(false)) return;
+    if (checkValidContact(event, false)) return;
     // Add Contact
     contactData = generateNewContact(event, false);
     $.ajax({
@@ -397,7 +427,7 @@ var enterNewContact = function(e) {
     resetContactDisplay();
 }
 
-var checkValidContact = function(edit_flag) {
+var checkValidContact = function(event, edit_flag) {
     var pre_id;
     var invalid;
     edit_flag ? pre_id = "edit_" : pre_id = "";
@@ -459,7 +489,7 @@ var checkForDupe = function(event, edit_flag) {
     return false;
 }
 
-var checkPotentialDupes = function() {
+var checkPotentialDupes = function(event) {
     $("#dupeArea").html("");
     if ($("#recvcall").val() === "") return;
     for (var x in fullContactList)
@@ -594,8 +624,8 @@ var deleteContact = function() {
     updateDisplay();
 }
 
-var editContact = function() {
-    if (checkValidContact(true)) return;
+var editContact = function(event) {
+    if (checkValidContact(event, true)) return;
     contactData = generateNewContact(event, true);
     $.ajax({
         type: "PUT",
@@ -646,15 +676,21 @@ var getMasterList = function(contest_name_id, force_reload) {
     });
 }
 
-var initSentData = function() {
+var initSentData = function(edit_flag) {
     $(".modal-title").html("SET CONTEST DATA");
     $(".modal-body").load("views/sent_data.php", function() {
         $("#sentdataform").submit(function(event) {
             event.preventDefault();
             validateSentData();
         });
+        if (edit_flag) loadContestName();
     });
     $(".modal").modal();
+    $(".modal").on('hide.bs.modal', function() {
+        $(".modal").off('hide.bs.modal');
+        if (getCookie('contest_id') && getCookie('contest_name_id'))
+            displayRefresh = setInterval(updateDisplay, 6000);
+    });
 }
 
 var loadContestName = function() {

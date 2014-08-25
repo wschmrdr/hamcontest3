@@ -37,6 +37,7 @@ if (isset($messageHandler)) {
         <div id="checkLine"></div>
         <div id="contactArea"></div>
         <div id="dupeArea"></div>
+        <a href="#" id="sentdata">Edit Contest Data</a><br/>
         <a href="#" id="download">Download</a><br/>
         <a href="#" id="prefs">Preferences</a><br/>
         <a href="index.php?logout">Logout</a><br/>
