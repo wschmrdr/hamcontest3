@@ -118,6 +118,13 @@ class SQLfunction
         $this->log_data($sql_string);
         return $this->db_connection->query($sql_string);
     }
+    public function delete($where = array())
+    {
+        if (count(where) <= 0) throw new Exception("Delete must contain parameters.");
+        $sql_string = "DELETE FROM " . $this->db_db . "." . $this->db_table . $this->build_where($where);
+        $this->log_data($sql_string);
+        return $this->db_connection->query($sql_string);
+    }
 
     private function build_where($where)
     {

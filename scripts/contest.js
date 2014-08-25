@@ -1,4 +1,4 @@
-var contactToEdit, fullContactList, masterList, contestList, dataTypeList, dupeList;
+var contactToEdit, fullContactList, masterList, contestList, dataTypeList, dupeList, enumValues = {};
 
 $(document).ready( function() {
     setTimeout("", 1);
@@ -38,16 +38,16 @@ var initMainScreen = function() {
     updateDisplay();
 }
 
-var initDataEntryDisplay = function(edit) {
+var initDataEntryDisplay = function(edit_flag) {
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
     var data_container, pre_id;
-    edit ? data_container = "edit_dataEntry" : data_container = "dataEntry";
-    edit ? pre_id = "edit_" : pre_id = "";
+    edit_flag ? data_container = "edit_dataEntry" : data_container = "dataEntry";
+    edit_flag ? pre_id = "edit_" : pre_id = "";
     if (!$("#" + data_container).html())
     {
         var callAdded = false;
         var s = "";
-        edit ? null : s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(event); return false;'>";
+        edit_flag ? null : s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(event); return false;'>";
         var double_index = 0;
         for (var x = 1; x < 6; x++)
         {
@@ -117,15 +117,15 @@ var initDataEntryDisplay = function(edit) {
                     break;
             }
         }
-        edit ? null : s += "<input type='submit' name='contactdata' value='OK' /></form>";
+        edit_flag ? null : s += "<input type='submit' name='contactdata' value='OK' /></form>";
         $("#" + data_container).html(s);
     }
 }
 
-var initFrequencyDisplay = function(edit) {
+var initFrequencyDisplay = function(edit_flag) {
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
     var data_container;
-    edit ? data_container = "edit_frequency" : data_container = "frequency";
+    edit_flag ? data_container = "edit_frequency" : data_container = "frequency";
     if (!$("#" + data_container).html())
     {
         if (contest['band_flag'] != "Y")
@@ -135,10 +135,10 @@ var initFrequencyDisplay = function(edit) {
     }
 }
 
-var initContactModeDisplay = function(edit) {
+var initContactModeDisplay = function(edit_flag) {
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
     var data_container;
-    edit ? data_container = "edit_contactmode" : data_container = "contactmode";
+    edit_flag ? data_container = "edit_contactmode" : data_container = "contactmode";
     if (!$("#" + data_container).html())
     {
         if (contest['mode_flag'] != "Y")
@@ -148,10 +148,10 @@ var initContactModeDisplay = function(edit) {
     }
 }
 
-var initSelectSectionDisplay = function(edit) {
+var initSelectSectionDisplay = function(edit_flag) {
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
     var data_container;
-    edit ? data_container = "edit_sectSelect" : data_container = "sectSelect";
+    edit_flag ? data_container = "edit_sectSelect" : data_container = "sectSelect";
     if (!$("#" + data_container).html())
     {
     }
@@ -388,7 +388,7 @@ var enterNewContact = function(e) {
     // Check for Valid Contact
     if (checkValidContact(false)) return;
     // Add Contact
-    contactData = generateNewContact();
+    contactData = generateNewContact(event, false);
     $.ajax({
         type: "POST",
         url: "handlers/contact_data.php",
@@ -397,14 +397,14 @@ var enterNewContact = function(e) {
     resetContactDisplay();
 }
 
-var checkValidContact = function(edit) {
+var checkValidContact = function(edit_flag) {
     var pre_id;
     var invalid;
-    edit ? pre_id = "edit_" : pre_id = "";
+    edit_flag ? pre_id = "edit_" : pre_id = "";
     
 
     // Dupe Check
-    invalid = checkForDupe(edit);
+    invalid = checkForDupe(event, edit_flag);
 
     // Contents
     if ($("#" + pre_id + "recvcall").val())
@@ -435,19 +435,23 @@ var checkValidContact = function(edit) {
     return invalid;
 }
 
-var checkForDupe = function(edit) {
+var checkForDupe = function(event, edit_flag) {
     var pre_id;
-    edit ? pre_id = "edit_" : pre_id = "";
+    edit_flag ? pre_id = "edit_" : pre_id = "";
 
     $("#" + pre_id + "dupeArea").html("");
     if ($("#" + pre_id + "recvcall").val() === "") return false;
     for (var x in fullContactList)
     {
-        if (checkContactForDupe(fullContactList[x], generateNewContact(), true))
+        if (edit_flag)
+        {
+            if (fullContactList[x]['entry'] === contactToEdit['entry']) continue;
+        }
+        if (checkContactForDupe(fullContactList[x], generateNewContact(event, edit_flag), true))
         {
             var fullContact = _.findWhere(fullContactList, function(ct) { return ct['entry'] == fullContactList[x]['entry']; });
             $("#" + pre_id + "dupeArea").html(fullContactList[x]['recvcall'] + " IS A DUPLICATE! CONTACTED AT " + fullContact['contactdate']);
-            if (!edit)
+            if (!edit_flag)
                 resetContactDisplay();
             return true;
         }
@@ -460,7 +464,7 @@ var checkPotentialDupes = function() {
     if ($("#recvcall").val() === "") return;
     for (var x in fullContactList)
     {
-        if (checkContactForDupe(fullContactList[x], generateNewContact(), false)) $("#dupeArea").html($("#dupeArea").html() + fullContactList[x]['recvcall'] + " ");
+        if (checkContactForDupe(fullContactList[x], generateNewContact(event, false), false)) $("#dupeArea").html($("#dupeArea").html() + fullContactList[x]['recvcall'] + " ");
     }
 }
 
@@ -486,26 +490,34 @@ var repeatCallSign = function(contact1) {
     return false;
 }
 
-var generateNewContact = function() {
+var generateNewContact = function(event, edit_flag) {
+    var pre_id;
+    edit_flag ? pre_id = "edit_" : pre_id = "";
+
     var instance = _.findWhere(masterList, {
         contest_id: getCookie("contest_id")
     });
+    if (contactToEdit)
+        var entry_val = contactToEdit['entry'];
+    else
+        var entry_val = "";
     return {
         contest_id : instance["contest_id"],
-        frequency : $("#frequency").val() || instance["band_cat"],
-        contactmode : $("#contactmode").val() || instance["mode_cat"],
+        entry : entry_val,
+        frequency : $("#" + pre_id + "frequency").val() || instance["band_cat"],
+        contactmode : $("#" + pre_id + "contactmode").val() || instance["mode_cat"],
         sentcall : instance["callsign"],
-        sentdata1 : $("#sentdata1").val() || instance["x_data1"],
-        sentdata2 : $("#sentdata2").val() || instance["x_data2"],
-        sentdata3 : $("#sentdata3").val() || instance["x_data3"],
-        sentdata4 : $("#sentdata4").val() || instance["x_data4"],
-        sentdata5 : $("#sentdata5").val() || instance["x_data5"],
-        recvcall : $("#recvcall").val().toUpperCase() || $("#recvcall").val(),
-        recvdata1 : $("#recvdata1").val(),
-        recvdata2 : $("#recvdata2").val(),
-        recvdata3 : $("#recvdata3").val(),
-        recvdata4 : $("#recvdata4").val(),
-        recvdata5 : $("#recvdata5").val()
+        sentdata1 : $("#" + pre_id + "sentdata1").val() || instance["x_data1"],
+        sentdata2 : $("#" + pre_id + "sentdata2").val() || instance["x_data2"],
+        sentdata3 : $("#" + pre_id + "sentdata3").val() || instance["x_data3"],
+        sentdata4 : $("#" + pre_id + "sentdata4").val() || instance["x_data4"],
+        sentdata5 : $("#" + pre_id + "sentdata5").val() || instance["x_data5"],
+        recvcall : $("#" + pre_id + "recvcall").val().toUpperCase() || $("#" + pre_id + "recvcall").val(),
+        recvdata1 : $("#" + pre_id + "recvdata1").val(),
+        recvdata2 : $("#" + pre_id + "recvdata2").val(),
+        recvdata3 : $("#" + pre_id + "recvdata3").val(),
+        recvdata4 : $("#" + pre_id + "recvdata4").val(),
+        recvdata5 : $("#" + pre_id + "recvdata5").val()
     };
 }
 
@@ -526,20 +538,22 @@ var selectContactEdit = function(e) {
         setTimeout(initEditContact($("#contactList option:selected").val()), 1);
     });
     $(".modal").modal();
+    $(".modal").on('hide.bs.modal', function() { contactToEdit = {}; });
 }
 
 var initEditContact = function(entry) {
+    contactToEdit = _.findWhere(fullContactList, {entry: entry});
+    $("body").on("edit_frequencydone", function() {
+        setSelectValue("edit_frequency", contactToEdit["frequency"]);
+    });
+    $("body").on("edit_contactmodedone", function() {
+        setSelectValue("edit_contactmode", contactToEdit["contactmode"]);
+    });
+
     initDataEntryDisplay(true);
     initFrequencyDisplay(true);
     initContactModeDisplay(true);
     initSelectSectionDisplay(true);
-    contactToEdit = _.findWhere(fullContactList, {entry: entry});
-    $("body").on("editFrequencydone", function(event) {
-        setSelectValue("editFrequency", contactToEdit["frequency"]);
-    });
-    $("body").on("editContactmodedone", function(event) {
-        setSelectValue("editContactmode", contactToEdit["contactmode"]);
-    });
     $("#edit_sentcall").val(contactToEdit["sentcall"]);
     $("#edit_sentdata1").val(contactToEdit["sentdata1"]);
     $("#edit_sentdata2").val(contactToEdit["sentdata2"]);
@@ -552,10 +566,6 @@ var initEditContact = function(entry) {
     $("#edit_recvdata3").val(contactToEdit["recvdata3"]);
     $("#edit_recvdata4").val(contactToEdit["recvdata4"]);
     $("#edit_recvdata5").val(contactToEdit["recvdata5"]);
-}
-
-var triggerDone = function(selectID) {
-    if (selectID == "editFrequency") setSelectValue("editFrequency", contactToEdit["frequency"]);
 }
 
 var setSelectValue = function(selectID, value) {
@@ -573,13 +583,27 @@ var setSelectValue = function(selectID, value) {
 }
 
 var deleteContact = function() {
-    console.log("Delete Contact Selected.");
-    console.log(contactToEdit);
+    if (!confirm("Are you sure you want to delete this contact?")) return;
+    contactData = {entry: contactToEdit['entry']};
+    $.ajax({
+        type: "DELETE",
+        url: "handlers/contact_data.php",
+        data: { "contactData" : JSON.stringify(contactData) }
+    });
+    $(".modal").modal('hide');
+    updateDisplay();
 }
 
 var editContact = function() {
-    console.log("Edit Contact Selected.");
-    console.log(contactToEdit);
+    if (checkValidContact(true)) return;
+    contactData = generateNewContact(event, true);
+    $.ajax({
+        type: "PUT",
+        url: "handlers/contact_data.php",
+        data: { "contactData" : JSON.stringify(contactData) }
+    });
+    $(".modal").modal('hide');
+    updateDisplay();
 }
 
 var getContestList = function() {

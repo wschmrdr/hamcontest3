@@ -55,12 +55,22 @@ function enumGather(htmlField, enumlist, listindex, s, value, omit) {
         if (!enumCheckWrite(htmlField, enumlist, listindex, s)) enumGather(htmlField, enumlist, listindex + 1, s, value, omit);
         return;
     }
+    if (enumValues[enumlist[listindex]])
+    {
+        var values = enumValues[enumlist[listindex]];
+        for (var y in values)
+            s += enumWrite(value, omit, values[y]);
+        if (enumCheckWrite(htmlField, enumlist, listindex, s)) return;
+        else enumGather(htmlField, enumlist, listindex + 1, s, value, omit);
+        return;
+    }
     $.ajax({
         type: "GET",
         url: "handlers/enum_values.php",
         data: { "type": enumlist[listindex] },
         success: function(output) {
             var values = $.parseJSON(output);
+            enumValues[enumlist[listindex]] = values;
             for (var y in values)
                 s += enumWrite(value, omit, values[y]);
             if (enumCheckWrite(htmlField, enumlist, listindex, s)) return;

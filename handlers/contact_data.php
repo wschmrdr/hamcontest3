@@ -1,25 +1,15 @@
 <?php
-    if (isset($_GET['contest_id']) && !empty($_GET['contest_id']))
+    function validateData($data, $isPut)
     {
-        session_start();
-        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
-       
-        $sql = new SQLfunction();
-        $rows = $sql->sql(array("table" => "contact_data"))->select(array("contest_id" => $_GET['contest_id']));
-        echo json_encode($rows);
-    }
-    if (isset($_POST['contactData']) && !empty($_POST['contactData']))
-    {
-        session_start();
-        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
-        include($_SERVER['DOCUMENT_ROOT'] . '/shared/validate.php');
-
-        $data = json_decode($_POST['contactData'], true);
         $validator_checks = array('contest_id'  => array("required" => true, "numeric" => true),
                                   'frequency'   => array("required" => true, "enum" => array('band_cat', "column" => "shortname")),
                                   'contactmode' => array("required" => true, "enum" => array('mode_cat', "column" => "shortname")),
                                   'sentcall'    => array("required" => true, "callsign" => true),
                                   'recvcall'    => array("required" => true, "callsign" => true)); 
+        if ($isPut === true)
+        {
+            $validator_checks['entry'] = array("required" => true, "numeric" => true);
+        }
         $sql = new SQLfunction();
         $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_name_id"), "fetchall" => false))->select(array("contest_id" => $data['contest_id']));
         $contest_temp = $sql->sql(array("table" => "contest_list", "fetchall" => false))->select(array("contest_name_id" => $master_list['contest_name_id']));
@@ -61,7 +51,68 @@
             foreach ($validate->errors as $x) echo $x;
             die();
         }
-        $validate->good_data['contactdate'] = $sql->sysdate();
-        $query = $sql->sql(array("table" => "contact_data"))->insert($validate->good_data);
+
+        return $validate->good_data;
+    }
+
+    if (isset($_GET['contest_id']) && !empty($_GET['contest_id']))
+    {
+        session_start();
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
+       
+        $sql = new SQLfunction();
+        $rows = $sql->sql(array("table" => "contact_data"))->select(array("contest_id" => $_GET['contest_id']));
+        echo json_encode($rows);
+    }
+    if (isset($_POST['contactData']) && !empty($_POST['contactData']))
+    {
+        session_start();
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/validate.php');
+
+        $data = json_decode($_POST['contactData'], true);
+        $good_data = validateData($data, false);
+
+        $good_data['contactdate'] = $sql->sysdate();
+        $query = $sql->sql(array("table" => "contact_data"))->insert($good_data);
         if (!$query) throw new Exception("Cannot add contact to the database.");
     }
+    if ($_SERVER['REQUEST_METHOD'] == "PUT")
+    {
+        $data = array();
+
+        parse_str(file_get_contents('php://input'), $put_data);
+        session_start();
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/validate.php');
+
+        $put_data = json_decode($put_data["contactData"]);
+        foreach ($put_data as $k => $v)
+        {
+            $data[$k] = $v;
+        }
+        $good_data = validateData($data, true);
+
+        $sql = new SQLfunction();
+        $query = $sql->sql(array("table" => "contact_data"))->update($good_data, array("entry" => $good_data['entry']));
+        if (!$query) throw new Exception("Cannot add contact to the database.");
+    }
+    if ($_SERVER['REQUEST_METHOD'] == "DELETE")
+    {
+        $data = array();
+
+        parse_str(file_get_contents('php://input'), $delete_data);
+        session_start();
+        include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
+
+        $delete_data = json_decode($delete_data["contactData"]);
+        foreach ($delete_data as $k => $v)
+        {
+            $data[$k] = $v;
+        }
+
+        $sql = new SQLfunction();
+        $query = $sql->sql(array("table" => "contact_data"))->delete(array("entry" => $data['entry']));
+        if (!$query) throw new Exception("Cannot add contact to the database.");
+    }
+?>

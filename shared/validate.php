@@ -7,7 +7,6 @@ class Validation
 
     public function __construct($caller, $data, $validators)
     {
-
         $this->caller_function = $caller;
         foreach ($validators as $val_k => $val_v)
         {
@@ -46,7 +45,6 @@ class Validation
             $this->log_data($error);
         }
     }
-
     private function val_required($data, $key)
     {
         if (!array_key_exists($key, $data)) $this->errors[$key] = "Validation for " . $this->caller_function . ": Key " . $key . " is required.";
@@ -120,7 +118,6 @@ class Validation
         if ($data[$key] == 'Q') $this->good_data['power'] = "QRP";
         else $this->good_data['power'] = in_array($data[$key], array('A', 'L', 'W')) ? "LOW" : "HIGH";
     }
-
     private function log_data($log_value)
     {
         $log = new Logging();
