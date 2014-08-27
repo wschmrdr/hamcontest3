@@ -162,6 +162,21 @@ var initSelectSectionDisplay = function(edit_flag) {
     }
 }
 
+var initContactTimeDisplay = function() {
+    var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
+    var data_container = "edit_contacttime_container";
+    if (!$("#" + data_container).html())
+    {
+        $("#" + data_container).html("<label for='edit_contacttime'>Date and Time (Local):</label><input id='edit_contacttime' name='edit_Contacttime'/>");
+        $("#edit_contacttime").on('focusin', function() {
+            $("#edit_contacttime").datetimepicker({
+                timeFormat: "HH:mm:ss",
+                dateFormat: "yy-mm-dd",
+            });
+        });
+    }
+}
+
 var updateDisplay = function() {
     $.ajax({
         type: "GET",
@@ -531,7 +546,7 @@ var generateNewContact = function(event, edit_flag) {
         var entry_val = contactToEdit['entry'];
     else
         var entry_val = "";
-    return {
+    var contact_gen = {
         contest_id : instance["contest_id"],
         entry : entry_val,
         frequency : $("#" + pre_id + "frequency").val() || instance["band_cat"],
@@ -549,6 +564,9 @@ var generateNewContact = function(event, edit_flag) {
         recvdata4 : $("#" + pre_id + "recvdata4").val(),
         recvdata5 : $("#" + pre_id + "recvdata5").val()
     };
+    if (edit_flag)
+        contact_gen['contactdate'] = moment.utc($("#edit_contacttime").val()).format("YYYY-MM-DD HH:mm:ss");
+    return contact_gen;
 }
 
 var resetContactDisplay = function() {
@@ -584,6 +602,7 @@ var initEditContact = function(entry) {
     initFrequencyDisplay(true);
     initContactModeDisplay(true);
     initSelectSectionDisplay(true);
+    initContactTimeDisplay();
     $("#edit_sentcall").val(contactToEdit["sentcall"]);
     $("#edit_sentdata1").val(contactToEdit["sentdata1"]);
     $("#edit_sentdata2").val(contactToEdit["sentdata2"]);
@@ -596,6 +615,7 @@ var initEditContact = function(entry) {
     $("#edit_recvdata3").val(contactToEdit["recvdata3"]);
     $("#edit_recvdata4").val(contactToEdit["recvdata4"]);
     $("#edit_recvdata5").val(contactToEdit["recvdata5"]);
+    $("#edit_contacttime").val(contactToEdit["contactdate"]);
 }
 
 var setSelectValue = function(selectID, value) {

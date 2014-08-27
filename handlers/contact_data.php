@@ -9,6 +9,7 @@
         if ($isPut === true)
         {
             $validator_checks['entry'] = array("required" => true, "numeric" => true);
+            $validator_checks['contactdate'] = array("required" => true, "date" => true);
         }
         $sql = new SQLfunction();
         $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_name_id"), "fetchall" => false))->select(array("contest_id" => $data['contest_id']));

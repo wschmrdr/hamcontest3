@@ -1,6 +1,6 @@
 <html>
     <body>
-        <div id="editContacttime"></div>
+        <div id="edit_contacttime_container"></div>
         <div id="edit_dataEntry"></div>
         <div id="edit_frequency_container"></div>
         <div id="edit_contactmode_container"></div>

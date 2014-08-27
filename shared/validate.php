@@ -29,6 +29,9 @@ class Validation
                     case "maxlength":
                         $this->val_maxlength($data, $val_k, $v_v);
                         break;
+                    case "date":
+                        if ($v_v === true) $this->val_date($data, $val_k);
+                        break;
                     case "special":
                         if ($v_v === "NovSSPrec") $this->val_NovSSPrec($data, $val_k, false);
                         else if ($v_v === "NovSSPrecEntry") $this->val_NovSSPrec($data, $val_k, true);
@@ -61,6 +64,11 @@ class Validation
     {
         if (!array_key_exists($key, $data)) return;
         if (!is_numeric($data[$key])) $this->errors[$key] = "Validation for " . $this->caller_function . ": Key " . $key . " must be a number.";
+    }
+    private function val_date($data, $key)
+    {
+        if (!array_key_exists($key, $data)) return;
+        if (!strtotime($data[$key])) $this->errors[$key] = "Validation for " . $this->caller_function . ": Key " . $key . " must be a valid date.";
     }
     private function val_maxlength($data, $key, $length)
     {

@@ -17,6 +17,8 @@ if (isset($messageHandler)) {
     <head>
         <link rel="stylesheet" href="assets/overrides.css"></link>
         <link rel="stylesheet" href="bootstrap-3.2.0-dist/css/bootstrap.css"></link>
+        <link rel="stylesheet" href="jquery-ui-1.11.1.custom/jquery-ui.css"></link>
+        <link rel="stylesheet" href="timepicker/jquery-ui-timepicker-addon.css"></link>
         <script src="jquery-1.10.1.js"></script>
         <script src="underscore-min.js"></script>
         <script src="scripts/contest.js"></script>
@@ -26,6 +28,8 @@ if (isset($messageHandler)) {
         <script src="moment.min.js"></script>
         <script src="pad.js"></script>
         <script src="bootstrap-3.2.0-dist/js/bootstrap.js"></script>
+        <script src="jquery-ui-1.11.1.custom/jquery-ui.js"></script>
+        <script src="timepicker/jquery-ui-timepicker-addon.js"></script>
     </head>
     <body>
         <div id="contestTitle"></div>
