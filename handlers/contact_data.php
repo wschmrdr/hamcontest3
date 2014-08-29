@@ -1,4 +1,13 @@
 <?php
+    $number_record = 0;
+    function log_data($log_value)
+    {
+        $log = new Logging();
+        touch('/tmp/hamcontest3.txt');
+        $log->lfile('/tmp/hamcontest3.txt');
+        $log->lwrite($log_value);
+        $log->lclose();
+    }
     function validateData($data, $isPut)
     {
         $validator_checks = array('contest_id'  => array("required" => true, "numeric" => true),
@@ -20,6 +29,7 @@
             $data_type = $sql->sql(array("table" => "data_type", "fetchall" => false))->select(array('data_type_id' => $contest_temp['type_data' . $x]));
             if (!$data_type) throw new Exception("Data Type does not exist. Please contact administrator.");
 
+            if ($data_type['long_name'] == 'Record Number') $number_record = $x;
             $validator_checks['sentdata' . $x] = array('required' => true, 'maxlength' => ($data_type["max_length"]));
             $validator_checks['recvdata' . $x] = array('required' => true, 'maxlength' => ($data_type["max_length"]));
             switch ($data_type["data_type"])
@@ -78,6 +88,11 @@
         $good_data['contactdate'] = $sql->sysdate();
         $query = $sql->sql(array("table" => "contact_data"))->insert($good_data);
         if (!$query) throw new Exception("Cannot add contact to the database.");
+        if ($number_record > 0)
+        {
+            $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_id", "x_data" . $x), "fetchall" => false))->select(array("contest_id" => $data['contest_id']));
+            $query = $sql->sql(array("table" => "master_list"))->update(array("x_data" . $x => $master_list["x_data" . $x] + 1), array("contest_id" => $master_list["contest_id"]));
+        }
     }
     if ($_SERVER['REQUEST_METHOD'] == "PUT")
     {

@@ -709,7 +709,7 @@ var initSentData = function(edit_flag) {
     $(".modal").on('hide.bs.modal', function() {
         $(".modal").off('hide.bs.modal');
         if (getCookie('contest_id') && getCookie('contest_name_id'))
-            displayRefresh = setInterval(updateDisplay, 6000);
+            displayRefresh = setInterval(updateDisplay, 60000);
     });
 }
 

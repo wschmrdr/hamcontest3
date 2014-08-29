@@ -120,7 +120,7 @@ class SQLfunction
     }
     public function delete($where = array())
     {
-        if (count(where) <= 0) throw new Exception("Delete must contain parameters.");
+        if (count($where) <= 0) throw new Exception("Delete must contain parameters.");
         $sql_string = "DELETE FROM " . $this->db_db . "." . $this->db_table . $this->build_where($where);
         $this->log_data($sql_string);
         return $this->db_connection->query($sql_string);
