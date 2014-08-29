@@ -1,4 +1,4 @@
-var contactToEdit, fullContactList, masterList, contestList, dataTypeList, dupeList, enumValues = {}, displayRefresh;
+var contactToEdit, fullContactList, masterList, contestList, dataTypeList, dupeList, enumValues = {}, displayRefresh, recordNumberEntry = 0;
 
 $(document).ready( function() {
     setTimeout("", 1);
@@ -48,6 +48,7 @@ var initDataEntryDisplay = function(edit_flag) {
     var data_container, pre_id;
     edit_flag ? data_container = "edit_dataEntry" : data_container = "dataEntry";
     edit_flag ? pre_id = "edit_" : pre_id = "";
+    recordNumberEntry = 0;
     if (!$("#" + data_container).html())
     {
         var callAdded = false;
@@ -66,6 +67,8 @@ var initDataEntryDisplay = function(edit_flag) {
             }
             var dataType = _.findWhere(dataTypeList, {data_type_id: contest['type_data' + x]});
             if (!dataType) continue;
+            if (dataType['long_name'] == 'Record Number')
+                recordNumberEntry = x;
             switch (dataType['data_type'])
             {
                 case "string":
@@ -437,9 +440,16 @@ var enterNewContact = function(event) {
     $.ajax({
         type: "POST",
         url: "handlers/contact_data.php",
-        data: { "contactData" : JSON.stringify(contactData) }
+        data: { "contactData" : JSON.stringify(contactData) },
+        success: function(output) {
+            if (recordNumberEntry > 0)
+            {
+                instance = _.findWhere(masterList, {contest_id: getCookie('contest_id')});
+                instance['x_data' + recordNumberEntry] += 1;
+            }
+            resetContactDisplay();
+        }
     });
-    resetContactDisplay();
 }
 
 var checkValidContact = function(event, edit_flag) {
@@ -526,7 +536,6 @@ var checkContactForDupe = function(contact1, contact2, fullCheck) {
 }
 
 var repeatCallSign = function(contact1) {
-    var contactList = $.parseJSON(getCookie('contactList'));
     if ($("#recvcall").val() === "") return false;
     for (var x in contactList)
     {
@@ -634,11 +643,27 @@ var setSelectValue = function(selectID, value) {
 
 var deleteContact = function() {
     if (!confirm("Are you sure you want to delete this contact?")) return;
-    contactData = {entry: contactToEdit['entry']};
+    var contactData = {entry: contactToEdit['entry']};
+    if (recordNumberEntry > 0)
+    {
+        var maxContact = _.max(fullContactList, function(con) {
+            return con['sentdata' + recordNumberEntry];
+        });
+    }
     $.ajax({
         type: "DELETE",
         url: "handlers/contact_data.php",
-        data: { "contactData" : JSON.stringify(contactData) }
+        data: { "contactData" : JSON.stringify(contactData) },
+        success: function(output) {
+            if (recordNumberEntry > 0)
+            {
+                if (contactToEdit['sentdata' + recordNumberEntry] === maxContact['sentdata' + recordNumberEntry])
+                {
+                    instance = _.findWhere(masterList, {contest_id: getCookie('contest_id')});
+                    instance['x_data' + recordNumberEntry] = maxContact['sentdata' + recordNumberEntry];
+                }
+            }
+        }
     });
     $(".modal").modal('hide');
     updateDisplay();
