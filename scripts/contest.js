@@ -22,7 +22,6 @@ $(document).ready( function() {
     $('body').on('change', '#frequency select', function() { console.log("Frequency Select triggered."); });
     $('body').on("keyup", "#recvcall", checkPotentialDupes);
     $('body').on('focusout', '#recvcall', checkForDupe);
-
 });
 
 var initContest = function() {
@@ -63,6 +62,7 @@ var initDataEntryDisplay = function(edit_flag) {
             {
                 s += htmlLongUpper(pre_id + 'recvcall', 'Call', "", true);
                 $("#" + pre_id + "recvcall input").attr("tabindex", "1");
+                s += "<br/>";
                 callAdded = true;
             }
             var dataType = _.findWhere(dataTypeList, {data_type_id: contest['type_data' + x]});
@@ -87,6 +87,7 @@ var initDataEntryDisplay = function(edit_flag) {
                         s += htmlLongUpper(pre_id + 'recvdata' + x, dataType['short_name'], "", true);
                         $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                     }
+                    s += "<br/>";
                     break;
                 case "number":
                     if (dataType['double_entry'] > 0)
@@ -103,6 +104,7 @@ var initDataEntryDisplay = function(edit_flag) {
                         s += htmlLongText(pre_id + 'recvdata' + x, dataType['short_name'], "", true, "number");
                         $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                     }
+                    s += "<br/>";
                     break;
                 case "special":
                     if (dataType['unique_name'] == "Precedent - ARRL November Sweepstakes")
@@ -122,6 +124,7 @@ var initDataEntryDisplay = function(edit_flag) {
                             $("#" + pre_id + "recvdata" + x + " input").attr("tabindex", '"' + (x + double_index + 1) + '"');
                         }
                     }
+                    s += "<br/>";
                     break;
             }
         }
@@ -445,7 +448,7 @@ var enterNewContact = function(event) {
             if (recordNumberEntry > 0)
             {
                 instance = _.findWhere(masterList, {contest_id: getCookie('contest_id')});
-                instance['x_data' + recordNumberEntry] += 1;
+                instance['x_data' + recordNumberEntry] = parseInt(instance['x_data' + recordNumberEntry]) + 1;
             }
             resetContactDisplay();
         }
@@ -663,10 +666,10 @@ var deleteContact = function() {
                     instance['x_data' + recordNumberEntry] = maxContact['sentdata' + recordNumberEntry];
                 }
             }
+            $(".modal").modal('hide');
+            updateDisplay();
         }
     });
-    $(".modal").modal('hide');
-    updateDisplay();
 }
 
 var editContact = function(event) {
@@ -804,15 +807,15 @@ var instanceSelected = function(contest_id) {
     var contest_name_id = getCookie('contest_name_id');
     if (!contest_name_id)
         contest_name_id = $("#contest_name").val();
-    var contest = _.findWhere(contestList, function(c) {
-        return c['contest_name_id'] == contest_name_id;
+    var contest = _.findWhere(contestList, {
+        contest_name_id: contest_name_id
     });
     if (!contest) return;
 
     var data_flags = ['assisted', 'band', 'mode', 'operator', 'power', 'station', 'time', 'transmitter', 'overlay'];
 
     var instance = _.findWhere(masterList, function(m) {
-        return m['contest_id'] == contest_id;
+        contest_id: contest_id
     });
 
     var value = "";

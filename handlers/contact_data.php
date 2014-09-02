@@ -1,5 +1,4 @@
 <?php
-    $number_record = 0;
     function log_data($log_value)
     {
         $log = new Logging();
@@ -29,7 +28,6 @@
             $data_type = $sql->sql(array("table" => "data_type", "fetchall" => false))->select(array('data_type_id' => $contest_temp['type_data' . $x]));
             if (!$data_type) throw new Exception("Data Type does not exist. Please contact administrator.");
 
-            if ($data_type['long_name'] == 'Record Number') $number_record = $x;
             $validator_checks['sentdata' . $x] = array('required' => true, 'maxlength' => ($data_type["max_length"]));
             $validator_checks['recvdata' . $x] = array('required' => true, 'maxlength' => ($data_type["max_length"]));
             switch ($data_type["data_type"])
@@ -88,6 +86,23 @@
         $good_data['contactdate'] = $sql->sysdate();
         $query = $sql->sql(array("table" => "contact_data"))->insert($good_data);
         if (!$query) throw new Exception("Cannot edit contact in the database.");
+
+        $contest_temp = $sql->sql(array("table" => "contest_list", "fetchall" => false))->select(array("contest_name_id" => $_COOKIE['contest_name_id']));
+        $number_record = 0;
+        for ($x = 1; $x < 6; $x++)
+        {
+            if ($contest_temp['type_data' . $x] <= 0) continue;
+            $data_type = $sql->sql(array("table" => "data_type", "fetchall" => false))->select(array('data_type_id' => $contest_temp['type_data' . $x]));
+            if (!$data_type) throw new Exception("Data Type does not exist. Please contact administrator.");
+
+            if ($data_type['long_name'] == 'Record Number')
+            {
+                $number_record = $x;
+                break;
+            }
+        }
+
+        log_data("NUMBER RECORD VALUE IS " . $number_record);
         if ($number_record > 0)
         {
             $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_id", "x_data" . $x), "fetchall" => false))->select(array("contest_id" => $data['contest_id']));
@@ -132,7 +147,7 @@
         $query = $sql->sql(array("table" => "contact_data"))->delete(array("entry" => $data['entry']));
         if (!$query) throw new Exception("Cannot delete contact from the database.");
 
-        $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_name_id"), "fetchall" => false))->select(array("contest_id" => $data['contest_id']));
+        $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_name_id"), "fetchall" => false))->select(array("contest_id" => $_COOKIE['contest_id']));
         $contest_temp = $sql->sql(array("table" => "contest_list", "fetchall" => false))->select(array("contest_name_id" => $master_list['contest_name_id']));
         for ($x = 1; $x < 6; $x++)
         {
@@ -149,8 +164,8 @@
 
         if ($number_record > 0)
         {
-            $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_id", "x_data" . $x), "fetchall" => false))->select(array("contest_id" => $data['contest_id']));
-            $number_contacts = $sql->sql(array("table" => "contact_data", "columns" => array("MAX" => "sentdata" . $number_record), "fetchall" => false))->select(array('contest_id' => $data['contest_id']));
+            $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_id", "x_data" . $x), "fetchall" => false))->select(array("contest_id" => $_COOKIE['contest_id']));
+            $number_contacts = $sql->sql(array("table" => "contact_data", "columns" => array("MAX" => "sentdata" . $number_record), "fetchall" => false))->select(array('contest_id' => $_COOKIE['contest_id']));
             if (array_key_exists('sentdata' . $number_record, $number_contacts)) $query = $sql->sql(array("table" => "master_list"))->update(array("x_data" . $number_record => $number_contacts['sentdata' . $number_record] + 1), array("contest_id" => $master_list["contest_id"]));
             else $query = $sql->sql(array("table" => "master_list"))->update(array("x_data" . $number_record => 1), array("contest_id" => $master_list["contest_id"]));
         }

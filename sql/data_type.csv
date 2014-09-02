@@ -5,3 +5,4 @@ data_type_id,unique_name,long_name,short_name,data_type,enum1,enum2,enum3,max_le
 4,Section - ARRL/RAC and DX,Section,Sec,enum,ARRLRAC,,DX,3,0,1
 5,Exchange - ARRL Field Day,Exchange,Exc,string,,,,3,0,1
 6,Signal Report,Signal Report,RST,number,,,,3,1,0
+7,Section - New York State,Section,Sec,enum,NewYork,USCan,DX,3,0,1

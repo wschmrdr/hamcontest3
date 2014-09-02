@@ -14,6 +14,10 @@ class SentData
     public function __construct()
     {
         include_once($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
+        foreach ($_POST as $k => $v)
+        {
+            $this->log_data($k . " : " . $v);
+        }
         $this->sql = new SQLfunction();
         $this->validateData();
         if (!empty($this->errors))
@@ -86,7 +90,7 @@ class SentData
                                   'band_cat' => array('required' => $contest_temp['band_flag'] == "Y", 'enum' => array('band_cat', 'column' => 'longname')),
                                   'mode_cat' => array('required' => $contest_temp['mode_flag'] == "Y", 'enum' => array('mode_cat', 'column' => 'longname')),
                                   'operator_cat' => array('required' => $contest_temp['operator_flag'] == "Y", 'enum' => array('operator_cat', 'column' => 'longname')),
-                                  'power' => array('required' => $contest_temp['power_flag'] == "Y", 'enum' => array('power', 'column' => 'longname')),
+                                  'power_cat' => array('required' => $contest_temp['power_flag'] == "Y", 'enum' => array('power_cat', 'column' => 'longname')),
                                   'station_cat' => array('required' => $contest_temp['station_flag'] == "Y", 'enum' => array('station_cat', 'column' => 'longname')),
                                   'time_cat' => array('required' => $contest_temp['time_flag'] == "Y", 'enum' => array('time_cat', 'column' => 'longname')),
                                   'transmitter_cat' => array('required' => $contest_temp['transmitter_flag'] == "Y", 'enum' => array('transmitter_cat', 'column' => 'longname')),
@@ -127,5 +131,14 @@ class SentData
 
         setcookie('contest_id', $contest_id, time() + (86400 * 30), '/');
         setcookie('contest_name_id', $contest_name_id, time() + (86400 * 30), '/');
+    }
+    private function log_data($log_value)
+    {
+        include_once($_SERVER['DOCUMENT_ROOT'] . "/classes/Logging.php");
+        $log = new Logging();
+        touch('/tmp/hamcontest3.txt');
+        $log->lfile('/tmp/hamcontest3.txt');
+        $log->lwrite($log_value);
+        $log->lclose();
     }
 }
