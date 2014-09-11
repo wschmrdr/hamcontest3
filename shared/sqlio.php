@@ -72,11 +72,15 @@ class SQLfunction
         return $this;
     }
 
-    public function select($where = array())
+    public function select($where = array(), $options = array())
     {
         $sql_string = "SELECT " . $this->db_columns .
                       " FROM " . $this->db_db . "." .
                       $this->db_table . $this->build_where($where);
+        if (array_key_exists("order", $options))
+        {
+            $sql_string = $sql_string . " ORDER BY " . $options['order'];
+        }
         $this->log_data($sql_string);
         $sql = $this->db_connection->query($sql_string);
         if (!$this->db_fetchall) return $this->remove_nulls($sql->fetch_array(MYSQL_ASSOC));

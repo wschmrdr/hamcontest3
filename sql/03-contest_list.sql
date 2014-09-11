@@ -1,6 +1,7 @@
 CREATE TABLE contest_list (
     contest_name_id  integer unsigned NOT NULL AUTO_INCREMENT,
     contest_name varchar(20) NOT NULL,
+    contest_long_name varchar(50) NOT NULL,
     type_data1 integer unsigned,
     type_data2 integer unsigned,
     type_data3 integer unsigned,
@@ -14,6 +15,7 @@ CREATE TABLE contest_list (
     data3_dupe_flag char(1),
     data4_dupe_flag char(1),
     data5_dupe_flag char(1),
+    sect_select_flag char(1),
     assisted_flag char(1),
     band_flag char(1),
     mode_flag char(1),

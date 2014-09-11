@@ -92,7 +92,7 @@ USCan,VT,Vermont
 USCan,NJ,New Jersey
 USCan,NY,New York
 USCan,DE,Delaware
-USCan,MD,Maryland ??? DC
+USCan,MD,Maryland - DC
 USCan,PA,Pennsylvania
 USCan,AL,Alabama
 USCan,FL,Florida
@@ -171,7 +171,7 @@ band_cat,Light,Light
 mode_cat,PH,SSB
 mode_cat,CW,CW
 mode_cat,RY,RTTY
-mode_cat,,MIX ED
+mode_cat,,MIXED
 operator_cat,,SINGLE-OP
 operator_cat,,MULTI-OP
 operator_cat,,CHECKLOG

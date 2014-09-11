@@ -1,5 +1,5 @@
-contest_name,type_data1,type_data2,type_data3,type_data4,type_data5,call_loc,freq_dupe_flag,mode_dupe_flag,data1_dupe_flag,data2_dupe_flag,data3_dupe_flag,data4_dupe_flag,data5_dupe_flag,assisted_flag,band_flag,mode_flag,operator_flag,power_flag,station_flag,time_flag,transmitter_flag,overlay_flag,personal_flag,score_formula
-ARRL-SS-CW,1,2,3,4,0,2,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y,c2m0m4
-ARRL-SS-SSB,1,2,3,4,0,2,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y,c2m0m4
-ARRL-FIELDDAY,5,4,0,0,0,0,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,c2m7CWac2m7RYa7PH
-NY-QSO-PARTY,6,7,0,0,0,0,Y,Y,N,Y,N,N,N,N,N,Y,Y,Y,Y,N,Y,Y,Y,c3m7RYac2m7CWa7PH
+contest_name,contest_long_name,type_data1,type_data2,type_data3,type_data4,type_data5,call_loc,freq_dupe_flag,mode_dupe_flag,data1_dupe_flag,data2_dupe_flag,data3_dupe_flag,data4_dupe_flag,data5_dupe_flag,sect_select_flag,assisted_flag,band_flag,mode_flag,operator_flag,power_flag,station_flag,time_flag,transmitter_flag,overlay_flag,personal_flag,score_formula
+ARRL-SS-CW,ARRL November Sweepstakes - CW Edition,1,2,3,4,0,2,N,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y,c2m0m4
+ARRL-SS-SSB,ARRL November Sweepstakes - Phone Edition,1,2,3,4,0,2,N,N,N,N,N,N,N,N,S,N,Y,S,S,S,N,N,N,Y,c2m0m4
+ARRL-FIELDDAY,ARRL Field Day,5,4,0,0,0,0,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,c2m7CWac2m7RYa7PH
+NY-QSO-PARTY,New York QSO Party,6,7,0,0,0,0,Y,Y,N,Y,N,N,N,Y,N,N,Y,Y,Y,Y,N,Y,Y,Y,c3m7RYac2m7CWa7PH

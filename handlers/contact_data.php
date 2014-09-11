@@ -70,7 +70,7 @@
         include($_SERVER['DOCUMENT_ROOT'] . '/shared/sqlio.php');
        
         $sql = new SQLfunction();
-        $rows = $sql->sql(array("table" => "contact_data"))->select(array("contest_id" => $_GET['contest_id']));
+        $rows = $sql->sql(array("table" => "contact_data"))->select(array("contest_id" => $_GET['contest_id']), array("order" => "contactdate desc"));
         echo json_encode($rows);
     }
     if (isset($_POST['contactData']) && !empty($_POST['contactData']))
@@ -149,6 +149,7 @@
 
         $master_list = $sql->sql(array("table" => "master_list", "columns" => array("contest_name_id"), "fetchall" => false))->select(array("contest_id" => $_COOKIE['contest_id']));
         $contest_temp = $sql->sql(array("table" => "contest_list", "fetchall" => false))->select(array("contest_name_id" => $master_list['contest_name_id']));
+        $number_record = 0;
         for ($x = 1; $x < 6; $x++)
         {
             if ($contest_temp['type_data' . $x] <= 0) continue;

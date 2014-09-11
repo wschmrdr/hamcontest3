@@ -6,25 +6,16 @@
  */
 class Registration
 {
-    /**
-     * @var object $db_connection The database connection
-     */
-    private $db_connection = null;
-    /**
-     * @var array $errors Collection of error messages
-     */
+    private $sql = null;
     public $errors = array();
-    /**
-     * @var array $messages Collection of success / neutral messages
-     */
     public $messages = array();
 
-    /**
-     * the function "__construct()" automatically starts whenever an object of this class is created,
-     * you know, when you do "$registration = new Registration();"
-     */
     public function __construct()
     {
+        session_start();
+        require_once($_SERVER['DOCUMENT_ROOT'] . "/shared/sqlio.php");
+        $this->sql = new SQLfunction();
+
         if (isset($_POST["register"])) {
             $this->registerNewUser();
         }
@@ -65,49 +56,24 @@ class Registration
             && !empty($_POST['user_password_repeat'])
             && ($_POST['user_password_new'] === $_POST['user_password_repeat'])
         ) {
-            // create a database connection
-            $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+            $user_name = strip_tags($_POST['user_name'], ENT_QUOTES);
+            $user_email = strip_tags($_POST['user_email'], ENT_QUOTES);
 
-            // change character set to utf8 and check it
-            if (!$this->db_connection->set_charset("utf8")) {
-                $this->errors[] = $this->db_connection->error;
-            }
+            $user_password = $_POST['user_password_new'];
 
-            // if no connection errors (= working database connection)
-            if (!$this->db_connection->connect_errno) {
+            // crypt the user's password with PHP 5.5's password_hash() function, results in a 60 character
+            // hash string. the PASSWORD_DEFAULT constant is defined by the PHP 5.5, or if you are using
+            // PHP 5.3/5.4, by the password hashing compatibility library
+            $user_password_hash = password_hash($user_password, PASSWORD_DEFAULT);
 
-                // escaping, additionally removing everything that could be (html/javascript-) code
-                $user_name = $this->db_connection->real_escape_string(strip_tags($_POST['user_name'], ENT_QUOTES));
-                $user_email = $this->db_connection->real_escape_string(strip_tags($_POST['user_email'], ENT_QUOTES));
+            $query_check_user_name = $this->sql->sql(array("table" => "users"))->select(array("user_name" => $user_name));
 
-                $user_password = $_POST['user_password_new'];
-
-                // crypt the user's password with PHP 5.5's password_hash() function, results in a 60 character
-                // hash string. the PASSWORD_DEFAULT constant is defined by the PHP 5.5, or if you are using
-                // PHP 5.3/5.4, by the password hashing compatibility library
-                $user_password_hash = password_hash($user_password, PASSWORD_DEFAULT);
-
-                // check if user or email address already exists
-                $sql = "SELECT * FROM members WHERE username = '" . $user_name . "' OR email = '" . $user_email . "';";
-                $query_check_user_name = $this->db_connection->query($sql);
-
-                if ($query_check_user_name->num_rows == 1) {
-                    $this->errors[] = "Sorry, that username / email address is already taken.";
-                } else {
-                    // write new user's data into database
-                    $sql = "INSERT INTO members (username, password, email)
-                            VALUES('" . $user_name . "', '" . $user_password_hash . "', '" . $user_email . "');";
-                    $query_new_user_insert = $this->db_connection->query($sql);
-
-                    // if user has been added successfully
-                    if ($query_new_user_insert) {
-                        $this->messages[] = "Your account has been created successfully. You can now log in.";
-                    } else {
-                        $this->errors[] = "Sorry, your registration failed. Please go back and try again.";
-                    }
-                }
+            if (count($query_check_user_name) == 1) {
+                $this->errors[] = "Sorry, that username / email address is already taken.";
             } else {
-                $this->errors[] = "Sorry, no database connection.";
+                // write new user's data into database
+                $this->sql->sql(array("table" => "users"))->insert(array("user_name" => $user_name, "user_password_hash" => $user_password_hash, "user_email" => $user_email));
+                $this->messages[] = "Your account has been created successfully. You can now log in.";
             }
         } else {
             $this->errors[] = "An unknown error occurred.";

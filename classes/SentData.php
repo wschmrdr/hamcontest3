@@ -1,7 +1,4 @@
 <?php
-
-/**
- */
 class SentData
 {
     private $db_connection = null;
@@ -25,7 +22,6 @@ class SentData
         $this->writeData();
         if (!empty($this->errors))
             return;
-        setCookie("contestData", json_encode($this->good_data), time() + (86400*30), '/');
     }
     private function validateData()
     {
@@ -65,6 +61,11 @@ class SentData
                 }
                 continue;
             }
+            if (stripos($data_type["unique_name"], "Section") !== false)
+            {
+                $_POST['location'] = $_POST['x_data' . $x];
+                $validator_checks['location'] = array("required" => false);
+            }
             $validator_checks['x_data' . $x] = array('required' => ($data_type["sent_data"] != 0));
             switch ($data_type["data_type"]) 
             {
@@ -102,7 +103,8 @@ class SentData
                                   'addresscity' => array('required' => false),
                                   'addressstate' => array('required' => false),
                                   'addresszip' => array('required' => false),
-                                  'addresscountry' => array('required' => false));
+                                  'addresscountry' => array('required' => false),
+                                  'soapbox' => array('required' => false) );
 
         $validator_checks = array_merge($validator_checks, $validator_append);
         $validate = new Validation("SentData", $_POST, $validator_checks);

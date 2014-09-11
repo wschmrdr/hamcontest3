@@ -123,8 +123,8 @@ class Validation
         }
         $this->good_data['assisted_cat'] = in_array($data[$key], array('M', 'W', 'U', 'L')) ? "ASSISTED" : "NON-ASSISTED";
         $this->good_data['operator_cat'] = in_array($data[$key], array('M', 'W')) ? "MULTI-OP" : "SINGLE-OP";
-        if ($data[$key] == 'Q') $this->good_data['power'] = "QRP";
-        else $this->good_data['power'] = in_array($data[$key], array('A', 'L', 'W')) ? "LOW" : "HIGH";
+        if ($data[$key] == 'Q') $this->good_data['power_cat'] = "QRP";
+        else $this->good_data['power_cat'] = in_array($data[$key], array('A', 'L', 'W')) ? "LOW" : "HIGH";
     }
     private function log_data($log_value)
     {

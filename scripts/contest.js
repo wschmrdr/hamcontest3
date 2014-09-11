@@ -1,4 +1,16 @@
-var contactToEdit, fullContactList, masterList, contestList, dataTypeList, dupeList, enumValues = {}, displayRefresh, recordNumberEntry = 0;
+// GLOBAL VARIABLES NEEDED
+var contactToEdit,
+    fullContactList,
+    masterList,
+    contestList,
+    dataTypeList,
+    dupeList,
+    enumValues = {},
+    displayRefresh,
+    recordNumberEntry = 0,
+    sectionEntry = 0,
+    dupe_found_flag = false,
+    current_page = 1;
 
 $(document).ready( function() {
     setTimeout("", 1);
@@ -13,15 +25,16 @@ $(document).ready( function() {
         initSentData(true);
         loadContestName();
     });
-    $("#download").click(function() { console.log("Download triggered."); });
-    $("#prefs").click(function() { console.log("Preferences triggered."); });
     $(".modal").on('click', ".edit-save", editContact);
     $(".modal").on('click', ".edit-dont-save", function() { contactToEdit = null; });
     $(".modal").on('click', ".edit-delete", deleteContact);
-    $('body').on('dblclick', '#contactList', selectContactEdit);
-    $('body').on('change', '#frequency select', function() { console.log("Frequency Select triggered."); });
+    $('body').on('click', '.edit-contact', selectContactEdit);
+    $('body').on('change', '#frequency', function() { console.log("Frequency Select triggered."); });
+    $('body').on('change', '#contactmode', updateUserCheckLine);
+    $('body').on('change', '#sectSelect', function() { console.log("Section triggered."); });
     $('body').on("keyup", "#recvcall", checkPotentialDupes);
     $('body').on('focusout', '#recvcall', checkForDupe);
+    $('body').on('click', '.page_change', changePage);
 });
 
 var initContest = function() {
@@ -34,7 +47,7 @@ var initMainScreen = function() {
     var contest = _.findWhere(contestList, {
         contest_name_id: getCookie("contest_name_id")
     });
-    $("#contestTitle").html(contest['contest_name']);
+    $("#contestTitle").html("<h4 class='pull-left'>" + contest['contest_long_name'] + "</h4>");
     initDataEntryDisplay(false);
     initFrequencyDisplay(false);
     initContactModeDisplay(false);
@@ -48,27 +61,25 @@ var initDataEntryDisplay = function(edit_flag) {
     edit_flag ? data_container = "edit_dataEntry" : data_container = "dataEntry";
     edit_flag ? pre_id = "edit_" : pre_id = "";
     recordNumberEntry = 0;
+    sectionEntry = 0;
     if (!$("#" + data_container).html())
     {
-        var callAdded = false;
         var s = "";
         edit_flag ? null : s = "<form id='contactdataform' name='contactdataform' method='POST' action='' onsubmit='enterNewContact(event); return false;'>";
         var double_index = 0;
+        s += htmlLongUpper(pre_id + 'recvcall', 'Call', "", true);
+        $("#" + pre_id + "recvcall input").attr("tabindex", "1");
+        s += "<br/>";
         for (var x = 1; x < 6; x++)
         {
             if (!contest['type_data' + x])
                 continue;
-            if (!callAdded && x > contest['call_loc'])
-            {
-                s += htmlLongUpper(pre_id + 'recvcall', 'Call', "", true);
-                $("#" + pre_id + "recvcall input").attr("tabindex", "1");
-                s += "<br/>";
-                callAdded = true;
-            }
             var dataType = _.findWhere(dataTypeList, {data_type_id: contest['type_data' + x]});
             if (!dataType) continue;
             if (dataType['long_name'] == 'Record Number')
                 recordNumberEntry = x;
+            if (dataType['long_name'].toLowerCase().match("section"))
+                sectionEntry = x;
             switch (dataType['data_type'])
             {
                 case "string":
@@ -128,7 +139,7 @@ var initDataEntryDisplay = function(edit_flag) {
                     break;
             }
         }
-        edit_flag ? null : s += "<input type='submit' name='contactdata' value='OK' /></form>";
+        edit_flag ? null : s += "<div class='pull-center'><input class='btn btn-primary' type='submit' name='contactdata' value='OK' /></div></form>";
         $("#" + data_container).html(s);
     }
 }
@@ -154,17 +165,21 @@ var initContactModeDisplay = function(edit_flag) {
     {
         if (contest['mode_flag'] != "Y")
         {
-            $("#" + data_container).html(htmlLongEnum({htmlfield: data_container, label: 'Mode', enumlist: ["mode_cat"], value: "", omit: ['MIXED']}));
+            $("#" + data_container).html(htmlLongEnum({htmlField: data_container, label: 'Mode', enumlist: ["mode_cat"], value: "", omit: ['MIXED']}));
         }
     }
 }
 
 var initSelectSectionDisplay = function(edit_flag) {
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
+    if (contest['sect_select_flag'] !== 'Y') return;
+    if (sectionEntry <= 0) return;
+    var dataType = _.findWhere(dataTypeList, {data_type_id : contest['type_data' + sectionEntry]});
     var data_container;
     edit_flag ? data_container = "edit_sectSelect" : data_container = "sectSelect";
     if (!$("#" + data_container).html())
     {
+        $("#" + data_container).html(htmlLongEnum({htmlField: data_container, label: 'Sent Section', enumlist: [dataType['enum1']], value: "", omit: []}));
     }
 }
 
@@ -173,7 +188,7 @@ var initContactTimeDisplay = function() {
     var data_container = "edit_contacttime_container";
     if (!$("#" + data_container).html())
     {
-        $("#" + data_container).html("<label for='edit_contacttime'>Date and Time (Local):</label><input id='edit_contacttime' name='edit_Contacttime'/>");
+        $("#" + data_container).html("<label for='edit_contacttime'>Local Date/Time</label><input id='edit_contacttime' name='edit_Contacttime'/>");
         $("#edit_contacttime").on('focusin', function() {
             $("#edit_contacttime").datetimepicker({
                 timeFormat: "HH:mm:ss",
@@ -201,7 +216,7 @@ var updateUserCheckLine = function() {
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
     var instance = _.findWhere(masterList, {contest_id : getCookie('contest_id')});
     var callAdded = false;
-    var s = "";
+    var s = "INFO TO SEND: ";
     for (var x = 1; x < 6; x++)
     {
         if (!contest['type_data' + x])
@@ -211,12 +226,19 @@ var updateUserCheckLine = function() {
             s += instance['callsign'] + " ";
             callAdded = true;
         }
-        if (instance['x_data' + x])
+        if (contest['type_data' + x])
         {
             var dataType = _.findWhere(dataTypeList, {data_type_id: contest['type_data' + x]});
             if (!dataType) continue;
             if (dataType['unique_name'] == "Precedent - ARRL November Sweepstakes")
                 s += displayNovSSPrecedent(instance['x_data' + x]) + " ";
+            else if (dataType['unique_name'] == "Signal Report")
+                if ($("#contactmode").val() == "PH")
+                    s += "[RS] ";
+                else if ($("#contactmode").val() == "CW" || $("#contactmode").val() == "RY")
+                    s += "[RST] ";
+                else
+                    s += " ";
             else
                 s += instance['x_data' + x] + " ";
         }
@@ -225,35 +247,33 @@ var updateUserCheckLine = function() {
 }
 
 function updateContactListDisplay() {
-    $("#contactArea").html("<select multiple id='contactList' name='contactList'></select>");
-    var contact_list_string = "FREQ- MO TIME CALLSIGN--";
+    $("#contactArea").html("<table id='contactList' name='contactList' class='contact-area'><thead></thead><tbody></tbody></table>");
+    var contact_headers = ['', 'Freq', 'Mode', 'Time', 'Call'];
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
     for (var x = 1; x <= 5; x++)
     {
         var dataType = _.findWhere(dataTypeList, {data_type_id: contest['type_data' + x]});
         if (!dataType) continue;
-        if (dataType['max_length'] == 0 && dataType['unique_name'] == "Record Number - Unlimited Digits")
-            var max_length = 4;
-        else
-            var max_length = dataType['max_length'];
         var s = dataType['short_name'];
-        contact_list_string += " " + s.pad(max_length, "-", 1);
+        contact_headers.push(dataType['short_name']);
     }
-    var option = document.createElement( 'option' );
-    option.value = option.text = contact_list_string;
-    option.disabled = true;
-    document.getElementsByName("contactList")[0].add(option);
+    var s = "<tr class='contact-area'>";
+    for (var i in contact_headers)
+        s += "<th class='contact-area-header'>" + contact_headers[i] + "</th>";
+    s += "</tr>";
+    $("#contactList thead").append(s);
+
     var contactList = [];
-    for (var x in fullContactList)
+    for (var x = (current_page - 1) * 5; x < fullContactList.length && x < current_page * 5; x++)
     {
         dupeList = ['recvcall'];
         if (contest['freq_dupe_flag'] == "Y") dupeList.push('frequency');
         if (contest['mode_dupe_flag'] == "Y") dupeList.push('contactmode');
-        var contact_string = "";
-        contact_string += fullContactList[x]['frequency'].pad(5, " ", 0) + " "
-                        + fullContactList[x]['contactmode'].pad(2, " ", 0) + " "
-                        + moment(fullContactList[x]['contactdate']).utc().format("HHmm") + " "
-                        + fullContactList[x]['recvcall'].pad(10, " ", 0);
+        var contact_string = "<tr class='contact-area'><td class='contact-area'><button type='button' id='" + fullContactList[x]["entry"] + "' class='btn btn-xs btn-warning glyphicon glyphicon-edit edit-contact'></button></td>";
+        contact_string += "<td class='contact-area'>" + fullContactList[x]['frequency'] + "</td><td class='contact-area'>"
+                        + fullContactList[x]['contactmode'] + "</td><td class='contact-area'>"
+                        + moment(fullContactList[x]['contactdate']).utc().format("HHmm") + "</td><td class='contact-area'>"
+                        + fullContactList[x]['recvcall'] + "</td>";
         for (var y = 1; y <= 5; y++)
         {
             var dataType = _.findWhere(dataTypeList, {
@@ -261,28 +281,30 @@ function updateContactListDisplay() {
             });
             if (dataType)
             {
-                if (dataType['max_length'] == 0)
-                {
-                    switch (dataType['unique_name'])
-                    {
-                        case "Record Number - Unlimited Digits":
-                            var max_length = 4;
-                            break;
-                        default:
-                            var max_length = dataType['max_length'];
-                    }
-                }
-                else var max_length = dataType['max_length'];
                 var s = fullContactList[x]['recvdata' + y];
-                contact_string += " " + s.pad(max_length, " ", 1);
+                contact_string += "<td class='contact-area'>" + s + "</td>";
                 if (contestList['data' + y + '_dupe_flag'] == "Y")
                     dupeList.push('recvdata' + y);
             }
         }
-        var option = document.createElement('option');
-        option.value = fullContactList[x]["entry"];
-        option.text = contact_string;
-        document.getElementsByName("contactList")[0].add(option);
+        $("#contactList tbody").append(contact_string);
+    }
+    var paginate_string = "<ul class='pagination'><li id='page_back'><a href='#' id='back' class='page_change'>&laquo;</a></li>";
+    for (var x = 1; x <= Math.ceil(fullContactList.length / 5); x++)
+    {
+        paginate_string += "<li id='page" + x + "'><a href='#' id='" + x + "' class='page_change'>" + x + "</a></li>";
+    }
+    paginate_string += "<li id='page_fore'><a href='#' id='fore' class='page_change'>&raquo;</a></li></ul>";
+    $("#contactArea").html($("#contactArea").html() + paginate_string);
+    $("li#page" + current_page).addClass("active");
+    switch (current_page)
+    {
+        case 1:
+            $("li#page_back").addClass("disabled");
+            break;
+        case Math.ceil(fullContactList.length / 5):
+            $("li#page_fore").addClass("disabled");
+            break;
     }
 }
 
@@ -306,7 +328,46 @@ function updateScoreDisplay() {
     var formula = contest['score_formula'];
     // MUST FOLLOW P-N, E, MD, AS
     var score = calculateScore(formula, []);
-    $("#score").html("Current Score: " + score.constant);
+
+    if (sectionEntry > 0)
+    {
+        var enum1, enum2, enum3, check;
+        var unique = {};
+        var distinct = [];
+        var dataType = _.findWhere(dataTypeList, { data_type_id: contest['type_data' + sectionEntry] });
+        enum1 = enumValues[dataType['enum1']];
+        dataType['enum2'] ? enum2 = enumValues[dataType['enum2']] : enum2 = [];
+        dataType['enum3'] ? enum3 = enumValues[dataType['enum3']] : enum3 = [];
+        if (_.findWhere(enum1, { shortname : instance['x_data' + sectionEntry] })) check = 1;
+        else if (_.findWhere(enum2, { shortname : instance['x_data' + sectionEntry] })) check = 2;
+        else check = 3;
+
+        for (var i in fullContactList)
+        {
+            _ref1 = fullContactList[i];
+            if (_.findWhere(enum1, {shortname : _ref1['recvdata' + sectionEntry]}))
+            {
+                if (typeof(unique[_ref1['recvdata' + sectionEntry]]) == "undefined")
+                    distinct.push(_ref1['recvdata' + sectionEntry]);
+            }
+            else if (check == 1 && _.findWhere(enum2, { shortname : _ref1['recvdata' + sectionEntry] }))
+            {
+                if (typeof(unique[_ref1['recvdata' + sectionEntry]]) == "undefined")
+                    distinct.push(_ref1['recvdata' + sectionEntry]);
+            }
+            unique[_ref1['recvdata' + sectionEntry]] = 0;
+        }
+        $("#score").html("<table class='score-display'><tr><td class='score-display pull-left'>Total Contacts: " + fullContactList.length + "</td><td class='score-display pull-center'>Total Score: " + score.constant + "</td><td class='score-display pull-right'>Total Sections: " + distinct.length + "</td></tr></table>");
+    }
+    else
+        $("#score").html("<table class='score-display'><tr><td class='score-display'>Total Contacts: " + fullContactList.length + "</td><td class='score-display'>Total Score: " + score.constant + "</td></tr></table>");
+
+    var score_to_DB = { "claimed_score" : score.constant };
+    $.ajax({
+        type: "PUT",
+        url: "handlers/master_list.php",
+        data: { "masterList" : JSON.stringify(score_to_DB) }
+    });
 }
 
 function calculateScore(formula, endchars) {
@@ -434,6 +495,22 @@ function calculateScore(formula, endchars) {
     return {'iter' : iter, 'constant' : constant};
 }
 
+var changePage = function(event) {
+    event.preventDefault();
+    switch (event.currentTarget.id)
+    {
+        case 'back':
+            current_page--;
+            break;
+        case 'fore':
+            current_page++;
+            break;
+        default:
+            current_page = parseInt(event.currentTarget.id);
+    }
+    updateContactListDisplay();
+}
+
 var enterNewContact = function(event) {
     event.preventDefault();
     // Check for Valid Contact
@@ -489,6 +566,11 @@ var checkValidContact = function(event, edit_flag) {
         $("#" + pre_id + "contactmode_required").html("REQUIRED").fadeOut(1600);
         invalid = true;
     }
+    if ($("select#" + pre_id + "sectSelect").val() == '')
+    {
+        $("#" + pre_id + "sectSelect_required").html("REQUIRED").fadeOut(1600);
+        invalid = true;
+    }
 
     return invalid;
 }
@@ -498,6 +580,8 @@ var checkForDupe = function(event, edit_flag) {
     edit_flag ? pre_id = "edit_" : pre_id = "";
 
     $("#" + pre_id + "dupeArea").html("");
+    if ($("#" + pre_id + "dupeArea").hasClass("dupe-found"))
+        $("#" + pre_id + "dupeArea").removeClass("dupe-found");
     if ($("#" + pre_id + "recvcall").val() === "") return false;
     for (var x in fullContactList)
     {
@@ -507,8 +591,10 @@ var checkForDupe = function(event, edit_flag) {
         }
         if (checkContactForDupe(fullContactList[x], generateNewContact(event, edit_flag), true))
         {
+            dupe_found_flag = true;
             var fullContact = _.findWhere(fullContactList, function(ct) { return ct['entry'] == fullContactList[x]['entry']; });
             $("#" + pre_id + "dupeArea").html(fullContactList[x]['recvcall'] + " IS A DUPLICATE! CONTACTED AT " + fullContact['contactdate']);
+            $("#" + pre_id + "dupeArea").addClass("dupe-found");
             if (!edit_flag)
                 resetContactDisplay();
             return true;
@@ -518,6 +604,13 @@ var checkForDupe = function(event, edit_flag) {
 }
 
 var checkPotentialDupes = function(event) {
+    if (dupe_found_flag == true)
+    {
+        dupe_found_flag = false;
+        return;
+    }
+    if ($("#dupeArea").hasClass("dupe-found"))
+        $("#dupeArea").removeClass("dupe-found");
     $("#dupeArea").html("");
     if ($("#recvcall").val() === "") return;
     for (var x in fullContactList)
@@ -551,6 +644,9 @@ var generateNewContact = function(event, edit_flag) {
     var pre_id;
     edit_flag ? pre_id = "edit_" : pre_id = "";
 
+    var contest = _.findWhere(contestList, {
+        contest_name_id : getCookie('contest_name_id')
+    });
     var instance = _.findWhere(masterList, {
         contest_id: getCookie("contest_id")
     });
@@ -578,6 +674,8 @@ var generateNewContact = function(event, edit_flag) {
     };
     if (edit_flag)
         contact_gen['contactdate'] = moment.utc($("#edit_contacttime").val()).format("YYYY-MM-DD HH:mm:ss");
+    if (sectionEntry > 0 && contest['sect_select_flag'] == 'Y')
+        contact_gen['sentdata' + sectionEntry] = $("#sectSelect").val();
     return contact_gen;
 }
 
@@ -590,12 +688,14 @@ var resetContactDisplay = function() {
         $("#recvdata" + x).val("");
     }
     updateDisplay();
+    var contest = _.findWhere(contestList, {contest_name_id: getCookie('contest_name_id')});
+    $("#recvcall").focus();
 }
 
 var selectContactEdit = function(e) {
     $(".modal-title").html("EDIT CONTACT");
     $(".modal-body").load("views/edit_contact.php", function() {
-        setTimeout(initEditContact($("#contactList option:selected").val()), 1);
+        setTimeout(initEditContact(e.currentTarget.id), 1);
     });
     $(".modal").modal();
     $(".modal").on('hide.bs.modal', function() { contactToEdit = {}; });
@@ -608,6 +708,9 @@ var initEditContact = function(entry) {
     });
     $("body").on("edit_contactmodedone", function() {
         setSelectValue("edit_contactmode", contactToEdit["contactmode"]);
+    });
+    $("body").on("edit_sectSelectdone", function() {
+        setSelectValue("edit_sectSelect", contactToEdit["sentdata" + sectionEntry]);
     });
 
     initDataEntryDisplay(true);
@@ -745,10 +848,10 @@ var loadContestName = function() {
     var contest_name_id = getCookie('contest_name_id');
     if (contest_name_id)
     {
-        contest = _.findWhere(contestList, {contest_name_id: contest_name_id});
+        var contest = _.findWhere(contestList, {contest_name_id: contest_name_id});
         if (contest)
         {
-            $("#contestname").html("Contest: " + contest['contest_name']);
+            $("#contestname").html("<label for='contest_name'>Contest:</label><input id='contest_name' type='hidden' name='contest_name' value='" + contest['contest_name_id'] + "'/><span class='static-sent'>" + contest['contest_name'] + "</span>");
             return contestSelected(contest_name_id);
         }
     }
@@ -771,7 +874,7 @@ var loadContestInstance = function() {
         instance = _.findWhere(masterList, {contest_id: contest_id});
         if (instance)
         {
-            $("#contestselect").html("Date: " + moment.utc(instance["contest_date"]).format("MMMM YYYY"));
+            $("#contestselect").html("<label for='contest_instance'>Date:</label><input id='contest_instance' type='hidden' name='contest_instance' value='" + instance['contest_id'] + "'/><span class='static-sent'>" + moment.utc(instance["contest_date"]).format("MMMM YYYY") + "</span>");
             return instanceSelected(contest_id);
         }
     }
@@ -785,7 +888,7 @@ var displayContestList = function() {
         s += "<option value='" + contestList[x]["contest_name_id"] + "'>" + contestList[x]["contest_name"] + "</option>";
     }
     s += "<option value='Custom'>Custom Contest...</option>";
-    $("#contestname").html("<select id='contest_name' name='contest_name' onchange='contestSelected(this.value)'>" +
+    $("#contestname").html("<label for='contest_name'>Contest Name</label><select id='contest_name' name='contest_name' onchange='contestSelected(this.value)'>" +
                             s + "</select><span id='contest_name_required'></span>");
 }
 
@@ -798,7 +901,7 @@ var displayInstanceList = function() {
         }
     }
     s += "<option value='-1'>New Contest</option>";
-    $("#contestselect").html("<select id='contest_instance' name='contest_instance' onchange='instanceSelected(this.value)'>" + s + "</select><span id='contest_instance_required'></span>");
+    $("#contestselect").html("<label for='contest_instance'>Contest</label><select id='contest_instance' name='contest_instance' onchange='instanceSelected(this.value)'>" + s + "</select><span id='contest_instance_required'></span>");
 }
 
 var instanceSelected = function(contest_id) {
@@ -863,7 +966,7 @@ var instanceSelected = function(contest_id) {
     for (var x = 0; x < data_flags.length; x++)
     {
         var data_title = data_flags[x].charAt(0).toUpperCase() + data_flags[x].slice(1);
-        if (contest[data_flags[x] + '_flag'] == "Y")
+        if (contest[data_flags[x] + '_flag'] === "Y" || contest[data_flags[x] + '_flag'] === "B")
         {
             if (instance) value = instance[data_flags[x] + "_cat"];
             $("#contestparams").html($("#contestparams").html() + "<div id='" + data_flags[x] + "_cat_container'></div>");
@@ -903,6 +1006,10 @@ var instanceSelected = function(contest_id) {
         $("#contestparams").html($("#contestparams").html() + "<div id='addresscountry'></div>");
         if (instance) value = instance['addresscountry'];
         $("#addresscountry").html(htmlLongText('addresscountry', "Country", value, false, "string"));
+
+        $("#contestparams").html($("#contestparams").html() + "<div id='soapbox'></div>");
+        if (instance) value = instance['soapbox'];
+        $("#soapbox").html(htmlTextArea('soapbox', "Soapbox", value, false, "string"));
     }
 }
 
@@ -948,7 +1055,7 @@ var validateSentData = function() {
     }
     // Now Contest Parameters
     // These will only display if they are required
-    var fields = ["assisted_cat", "band_cat", "mode_cat", "operator_cat", "power", "station_cat", "time_cat", "transmitter_cat", "overlay_cat"];
+    var fields = ["assisted_cat", "band_cat", "mode_cat", "operator_cat", "power_cat", "station_cat", "time_cat", "transmitter_cat", "overlay_cat"];
     for (var x in fields)
     {
         if ($("#" + x).length == 0) continue;
