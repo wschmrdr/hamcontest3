@@ -10,13 +10,15 @@ var contactToEdit,
     recordNumberEntry = 0,
     sectionEntry = 0,
     dupe_found_flag = false,
-    current_page = 1;
+    current_page = 1,
+    enumTypeList = [];
 
 $(document).ready( function() {
     setTimeout("", 1);
     initSentData(false);
     getDataType();
     getContestList();
+    getEnumTypeList();
 
     $(document).on("clLoadDone", "body", loadContestName);
 
@@ -35,6 +37,7 @@ $(document).ready( function() {
     $('body').on("keyup", "#recvcall", checkPotentialDupes);
     $('body').on('focusout', '#recvcall', checkForDupe);
     $('body').on('click', '.page_change', changePage);
+    $('body').on('click', '.custom-contest', initCustomContest);
 });
 
 var initContest = function() {
@@ -319,12 +322,13 @@ function updateScoreDisplay() {
     // OTHER CODES
     // p = (
     // n = )
-    // c = constant (followed by constant number
+    // c = constant (followed by constant number)
     //   0 = contacts
     // 1-5 = data row
     //   6 = frequency (followed by 5-char frequency)
     //   7 = contact mode (followed by 2-char mode)
     var contest = _.findWhere(contestList, {contest_name_id : getCookie('contest_name_id')});
+    var instance = _.findWhere(masterList, {contest_id : getCookie('contest_id')});
     var formula = contest['score_formula'];
     // MUST FOLLOW P-N, E, MD, AS
     var score = calculateScore(formula, []);
@@ -799,6 +803,19 @@ var getContestList = function() {
     });
 }
 
+var getEnumTypeList = function() {
+    $.ajax({
+        type: "GET",
+        url: "handlers/enum_values.php",
+        data: { "all_types" : true },
+        success: function(output) {
+            enumTypeList = $.parseJSON(output);
+            enumTypeList = _.pluck(enumTypeList, 'enum_type');
+            $("body").trigger("etlLoadDone");
+        }
+    });
+}
+
 var getDataType = function() {
     $.ajax({
         type: "GET",
@@ -830,17 +847,42 @@ var getMasterList = function(contest_name_id, force_reload) {
 var initSentData = function(edit_flag) {
     $(".modal-title").html("SET CONTEST DATA");
     $(".modal-body").load("views/sent_data.php", function() {
-        $("#sentdataform").submit(function(event) {
-            event.preventDefault();
-            validateSentData();
-        });
-        if (edit_flag) loadContestName();
+        $("#sentdataform").on('submit', validateSentData);
+        loadContestName();
     });
     $(".modal").modal();
     $(".modal").on('hide.bs.modal', function() {
         $(".modal").off('hide.bs.modal');
         if (getCookie('contest_id') && getCookie('contest_name_id'))
             displayRefresh = setInterval(updateDisplay, 60000);
+    });
+}
+
+var initCustomContest = function() {
+    $(".modal-title").html("CREATE CUSTOM CONTEST");
+    $(".modal-body").load("views/custom_contest.php", function() {
+        setTimeout("", 1);
+        $("#customcontestform").on('submit', validateCustomContest);
+        // Must call displayScoreHelp at this time to init the popover
+        $(".custom-score-help").on('click', displayScoreHelp());
+        $(".custom-data-type").on('click', initCustomDataType);
+        $(".cancel-custom").on('click', initSentData);
+        loadDataTypes();
+    });
+    $(".modal").on('hide.bs.modal', function() {
+        $(".modal").off('hide.bs.modal');
+        if (getCookie('contest_id') && getCookie('contest_name_id'))
+            displayRefresh = setInterval(updateDisplay, 60000);
+    });
+}
+
+var initCustomDataType = function() {
+    $(".modal-title").html("CREATE CUSTOM DATA TYPE");
+    $(".modal-body").load("views/custom_data_type.php", function() {
+        setTimeout("", 1);
+        $("#customdatatypeform").on('submit', validateCustomDataType);
+        $('.cancel-data-type').on('click', initCustomContest);
+        $('#data_type').on('change', selectCustomDataTypeDataType);
     });
 }
 
@@ -887,9 +929,8 @@ var displayContestList = function() {
     {
         s += "<option value='" + contestList[x]["contest_name_id"] + "'>" + contestList[x]["contest_name"] + "</option>";
     }
-    s += "<option value='Custom'>Custom Contest...</option>";
     $("#contestname").html("<label for='contest_name'>Contest Name</label><select id='contest_name' name='contest_name' onchange='contestSelected(this.value)'>" +
-                            s + "</select><span id='contest_name_required'></span>");
+                            s + "</select> <button type='button' class='btn btn-xs btn-info custom-contest'>Build Custom...</button><span id='contest_name_required'></span>");
 }
 
 var displayInstanceList = function() {
@@ -1013,7 +1054,8 @@ var instanceSelected = function(contest_id) {
     }
 }
 
-var validateSentData = function() {
+var validateSentData = function(event) {
+    event.preventDefault();
     // Front-end validate the data
     if ($("#contest_name").val() == '')
     {
@@ -1074,4 +1116,152 @@ var validateSentData = function() {
             getMasterList(getCookie('contest_name_id'), true);
         }
     });
+}
+
+var loadDataTypes = function() {
+    for (var x = 1; x <= 5; x++)
+    {
+        var s = "<label for='type_data" + x + "'>Data Field " + x + "</label>";
+        s +=    "<select id='type_data" + x + "' name='type_data" + x + "'>";
+        s +=        "<option value='0'>No Data</option>";
+        for (var y in dataTypeList)
+        {
+            s += "<option value='" + dataTypeList[y]['data_type_id'] + "'>" + dataTypeList[y]['unique_name'] + "</option>";
+        }
+        s += "</select>";
+        if (x == 1)
+            s += "<span id='type_data1_required'></span>";
+        $("#type_data" + x + "_container").html(s);
+    }
+}
+
+var displayScoreHelp = function() {
+    var s = "This is a string you compose to determine the score of the contest.<br/>" +
+            "<br/>" +
+            "LEGEND: Remember to use Operands BEFORE Data Codes<br/>" +
+            "<br/>" +
+            "OPERANDS: Mathematical Operations<br/>" +
+            "a = + (Addition)<br/>" +
+            "s = - (Subtraction)<br/>" +
+            "m = * (Multiplication)<br/>" +
+            "d = / (Division)<br/>" +
+            "e = ^ (Exponent)<br/>" +
+            "<br/>" +
+            "SPECIAL OPERANDS: Extra Operations<br/>" +
+            "p = ( (Begin Parentheses)<br/>" +
+            "n = ) (End Parentheses)<br/>" +
+            "c = Constant (followed by constant number)<br/>" +
+            "<br/>" +
+            "DATA CODES: Based upon the Content of the Contacts<br/>" +
+            "  0 = All Contacts<br/>" +
+            "1-5 = Unique Values of Data Field<br/>" +
+            "  6 = Contacts using Frequency (5-char frequency)<br/>" +
+            "  7 = Contacts using Contact Mode (2-char mode)<br/>";
+            "<br/>" +
+            "EXAMPLE: ARRL Field Day<br/>" +
+            "NOTE: Order of Operations is followed<br/>" +
+            "2 * all CW contacts + 2 * all RTTY contacts + all SSB contacts<br/>" +
+            "c2m7CWac2m7RYa7PH<br/>" +
+            "<br/>" +
+    $(".custom-score-help").popover({
+        placement : 'top',
+        title : 'How to Use the Score Formula',
+        html : true,
+        content : s
+    });
+}
+
+var validateCustomContest = function(event) {
+    event.preventDefault();
+    if ($("#type_data1").val() == '0')
+    {
+        ($("#type_data1_required").html("REQUIRED").fadeOut(1600));
+        return;
+    }
+    if (!confirm("WARNING! You will be unable to change this data.\nAre you sure you want to add this contest?")) return;
+    var fields = ['contest_long_name', 'contest_name', 'type_data1', 'type_data2', 'type_data3', 'type_data4', 'type_data5', 'call_loc', 'sect_select_flag', 'freq_dupe_flag', 'mode_dupe_flag', 'data1_dupe_flag', 'data2_dupe_flag', 'data3_dupe_flag', 'data4_dupe_flag', 'data5_dupe_flag', 'assisted_flag', 'band_flag', 'mode_flag', 'operator_flag', 'power_flag', 'station_flag', 'time_flag', 'transmitter_flag', 'overlay_flag', 'personal_flag', 'score_formula'];
+    var data = {};
+    var form_data = $("#customcontestform").serializeArray();
+    for (var x in form_data)
+    {
+        data[form_data[x]['name']] = form_data[x]['value'];
+        fields.splice(fields.indexOf(form_data[x]['name']), 1);
+    }
+    for (var x in fields)
+        data[fields[x]] = "N";
+    $.ajax({
+        type: "POST",
+        url: "handlers/contest_list.php",
+        data: { 'contest_list' : JSON.stringify(data) },
+        success: function(output) {
+            data['contest_name_id'] = output;
+            contestList.push(data);
+            initSentData();
+        }
+    });
+}
+
+var validateCustomDataType = function(event) {
+    event.preventDefault();
+    if ($("#data_type").val() == '')
+    {
+        ($("#data_type_required").html("REQUIRED").fadeOut(1600));
+        return;
+    }
+    if ($("#enum1") && $("#enum1").val() == '')
+    {
+        ($("#enum1_required").html("REQUIRED").fadeOut(1600));
+        return;
+    }
+    if (!confirm("WARNING! You will be unable to change this data.\nAre you sure you want to add this data type?")) return;
+    var fields = ['unique_name', 'long_name', 'short_name', 'data_type', 'enum1', 'enum2', 'enum3', 'max_length', 'double_entry', 'sent_data'];
+    var data = {};
+    var form_data = $("#customdatatypeform").serializeArray();
+    for (var x in form_data)
+    {
+        data[form_data[x]['name']] = form_data[x]['value'];
+        fields.splice(fields.indexOf(form_data[x]['name']), 1);
+    }
+    for (var x in fields)
+    {
+        if (fields[x] == 'double_entry' || fields[x] == 'sent_data')
+            data[fields[x]] = '0';
+        else
+            data[fields[x]] = '';
+    }
+    $.ajax({
+        type: "POST",
+        url: "handlers/data_type.php",
+        data: { 'data_type' : JSON.stringify(data) },
+        success: function(output) {
+            data['data_type_id'] = output;
+            dataTypeList.push(data);
+            initCustomContest();
+        }
+    });
+}
+
+var selectCustomDataTypeDataType = function () {
+    if ($("#data_type").val() == "enum")
+    {
+        for (var x = 1; x <= 3; x++)
+        {
+            var s = "<label for='enum" + x + "' class='long'>List " + x + "</label>";
+            s +=    "<select id='enum" + x + "' name='enum" + x + "'>";
+            s +=        "<option value=''>No Data</option>";
+            for (var y in enumTypeList)
+            {
+                s += "<option value='" + enumTypeList[y] + "'>" + enumTypeList[y] + "</option>";
+            }
+            s += "</select>";
+            if (x == 1)
+                s += "<span id='enum1_required'></span>";
+            s += "<br/>";
+            $(".enum_container").html($(".enum_container").html() + s);
+        }
+    }
+    else
+    {
+        $(".enum_container").html("");
+    }
 }

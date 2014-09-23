@@ -232,3 +232,15 @@ table.score-display {
 span {
     display: inline-block;
 }
+
+.custom-dupe-checkbox {
+    width: 20%;
+}
+
+.custom-radio-input {
+    width: 8%;
+}
+
+.popover {
+    max-width: 350px !important;
+}

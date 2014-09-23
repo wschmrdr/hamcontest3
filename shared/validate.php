@@ -102,6 +102,15 @@ class Validation
         $data_type = $sql->sql(array("table" => "enum_values", "fetchall" => false))->select(array('enum_type' => $sql->sqlIN($enum_array), $column_name => $data[$key]));
         if (!$data_type) $this->errors[$key] = "Validation for " . $this->caller_function . ": Key " . $key . " is not of this enum type.";
     }
+    private function val_list($data, $key, $acc_list)
+    {
+        if (!array_key_exists($key, $data)) return;
+        foreach ($acc_list as $x)
+        {
+            if ($x == $data[$key]) return;
+        }
+        $this->errors[$key] = "Validation for " . $this->caller_function . ": Key " . $key . " is not of this list.";
+    }
     private function val_NovSSPrec($data, $key, $entry)
     {
         if (!array_key_exists($key, $data)) return;
@@ -128,6 +137,7 @@ class Validation
     }
     private function log_data($log_value)
     {
+        include_once($_SERVER['DOCUMENT_ROOT'] . '/classes/Logging.php');
         $log = new Logging();
         touch('/tmp/hamcontest3.txt');
         $log->lfile('/tmp/hamcontest3.txt');

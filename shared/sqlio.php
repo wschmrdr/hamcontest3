@@ -50,6 +50,7 @@ class SQLfunction
                                                   $this->db_connection->real_escape_string($c);
             else if ($k === "COUNT") $this->db_columns = $this->db_columns . "COUNT(" .
                                                          $this->db_connection->real_escape_string($c) . ")";
+            else if ($k === "DISTINCT") $this->db_columns = $this->db_columns . "DISTINCT " . $this->db_connection->real_escape_string($c);
             else $this->db_columns = $this->db_columns . $this->db_connection->real_escape_string($c);
         }
     }
@@ -150,13 +151,13 @@ class SQLfunction
 
     private function log_data($log_value)
     {
+        include_once($_SERVER['DOCUMENT_ROOT'] . '/classes/Logging.php');
         $log = new Logging();
         touch('/tmp/hamcontest3.txt');
         $log->lfile('/tmp/hamcontest3.txt');
         $log->lwrite($log_value);
         $log->lclose();
     }
-
     private function remove_nulls($row)
     {
         foreach ($row as $k => $v)
