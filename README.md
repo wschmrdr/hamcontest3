@@ -59,8 +59,10 @@ HOW TO INSTALL:
     text password of your database. For added security, save this file
     outside the DocumentRoot.
 
-6.  Run the newly saved contents from step 5 in a MySQL terminal or a
-    phpMyAdmin console. Use the "root" user created at setup to do so.
+6.  Navigate to where the 00-commands.sql file was saved, and using the
+    console, enter the following:
+
+    mysql -u root -p < 00-commands.sql
    
 7.  Up one directory from the DocumentRoot, create a directory called
     "libraries". Move all contents of the "libraries" directory in the
