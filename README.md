@@ -74,7 +74,8 @@ HOW TO INSTALL:
     DocumentRoot.
 
 9.  Using a console on your server from the DocumentRoot, or as the 
-    administrator on phpMyAdmin, type or import the following (import
+    administrator on phpMyAdmin, type or import the following (if you 
+    are using phpMyAdmin, select [DB_NAME] and import the contents
     after < ):
 
     mysql -u root -p [DB_NAME] < sql/01-master_list.sql
